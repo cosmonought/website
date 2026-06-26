@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Neta DAO Academy</title>
+  <meta name="description" content="Free public seminars on Web3, technology, and philosophy from Neta DAO Academy." />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .seminar-item {
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      gap: 24px;
+      padding: 28px 0;
+      border-bottom: var(--rule);
+      align-items: start;
+    }
+    .seminar-item:first-child { border-top: var(--rule); }
+    .seminar-date { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); line-height: 1.5; padding-top: 3px; }
+    .seminar-title { font-family: var(--font-display); font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .seminar-desc { font-size: 13px; color: var(--text-muted); line-height: 1.65; }
+    .seminar-tag { display: inline-block; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--pink); margin-top: 10px; }
+    .track-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1px;
+      background: var(--gutter);
+      border: var(--rule);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 40px;
+    }
+    .track-item { background: var(--bg-panel); padding: 32px 28px; }
+    .track-item h4 { font-family: var(--font-display); font-size: 17px; font-weight: 700; margin-bottom: 10px; }
+    .track-item p { font-size: 13px; color: var(--text-muted); line-height: 1.7; }
+    .journal-block {
+      background: var(--bg);
+      border: var(--rule);
+      border-radius: 4px;
+      padding: 48px;
+      position: relative;
+      overflow: hidden;
+    }
+    .journal-block::before {
+      content: 'FORK';
+      position: absolute;
+      bottom: -20px;
+      right: 24px;
+      font-family: var(--font-display);
+      font-size: 120px;
+      font-weight: 700;
+      color: var(--gutter);
+      letter-spacing: -0.04em;
+      pointer-events: none;
+      user-select: none;
+      line-height: 1;
+    }
+    @media (max-width: 900px) {
+      .track-grid { grid-template-columns: 1fr; }
+      .journal-block { padding: 28px 24px; }
+      .journal-block::before { display: none; }
+    }
+    @media (max-width: 640px) {
+      .seminar-item { grid-template-columns: 1fr; gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="site-nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">
+        <div class="nav-logo-n"><span>N</span></div>
+        Neta DAO
+      </a>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="governance.html">Governance</a></li>
+        <li><a href="academy.html" class="active">Academy</a></li>
+        <li><a href="https://daodao.zone/dao/juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6" target="_blank" rel="noopener" class="nav-cta">DAO DAO ↗</a></li>
+      </ul>
+      <button class="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
+    </div>
+  </nav>
+
+  <section class="hero" style="padding-top:140px; padding-bottom:64px;">
+    <div class="container">
+      <p class="hero-eyebrow">Educational SubDAO · Free &amp; Open</p>
+      <h1>Neta DAO <span class="grad-text">Academy</span></h1>
+      <p class="hero-sub">An educational initiative dedicated to thinking rigorously about the Interchain — through public seminars, open meetings, and eventually a peer-reviewed journal. Free. No prerequisites. Everyone welcome.</p>
+      <div class="hero-actions">
+        <a href="https://github.com/NetaDAOAcademy" target="_blank" rel="noopener" class="btn btn-primary">GitHub ↗</a>
+        <a href="#journal" class="btn btn-outline">Fork Journal</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="container reveal">
+      <p class="section-label">Programs</p>
+      <h2 class="section-title">Open to everyone, always free</h2>
+      <p class="section-body">The Academy treats intellectual life as a public good. Our programs are designed to be accessible to anyone curious about Web3, governance, or the ideas shaping decentralized systems.</p>
+      <div class="track-grid">
+        <div class="track-item">
+          <h4>Public Seminars</h4>
+          <p>Free seminars on Web3, blockchain governance, technology, and philosophy. Topics range from the practical mechanics of Cosmos to post-Lacanian theory applied to decentralized systems. Sessions are open to all and recorded when possible.</p>
+        </div>
+        <div class="track-item">
+          <h4>Weekly Congressional Meetings</h4>
+          <p>The legislative sessions of Neta DAO — open to all members. Business, proposals, debates, and decisions happen here. These meetings are the DAO's primary deliberative forum and the closest thing to a town hall in the Interchain.</p>
+        </div>
+        <div class="track-item">
+          <h4>Research &amp; Writing</h4>
+          <p>The Academy produces written work on Interchain governance, Web3 political theory, and the philosophical questions raised by decentralized systems. This work feeds into the forthcoming Fork journal and is shared publicly.</p>
+        </div>
+        <div class="track-item">
+          <h4>Resources &amp; Reading</h4>
+          <p>Curated reading lists and resources for anyone seeking to understand Cosmos governance, crypto civics, and the theoretical frameworks that inform our work — from Lacan to Foucault to the Cosmos whitepaper.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="container reveal">
+      <div class="two-col" style="align-items:start;">
+        <div>
+          <span class="grad-bar"></span>
+          <p class="section-label">Seminar Series</p>
+          <h2 class="section-title">Past &amp; Upcoming Sessions</h2>
+          <p class="section-body">A record of Academy seminars. New sessions are announced through our community channels and added here.</p>
+          <p style="margin-top:16px; font-family:var(--font-mono); font-size:12px; color:var(--text-dim);">Sessions are held online. All are free to attend.</p>
+        </div>
+        <div>
+          <div class="seminar-item">
+            <div class="seminar-date">Ongoing</div>
+            <div>
+              <div class="seminar-title">Coining Reason: Web3 and the Philosophy of Value</div>
+              <div class="seminar-desc">The flagship Academy seminar series. Explores the philosophical underpinnings of decentralized finance, governance tokens, and the concept of value in the Interchain — with reference to Lacanian theory, political economy, and the history of money.</div>
+              <span class="seminar-tag">Philosophy · Economics · Governance</span>
+            </div>
+          </div>
+          <div class="seminar-item">
+            <div class="seminar-date">Open</div>
+            <div>
+              <div class="seminar-title">Weekly DAO Congressional Meetings</div>
+              <div class="seminar-desc">Open meetings of Neta DAO membership. Agenda items include active proposals, operational updates, and community discussion. The primary legislative forum of the DAO.</div>
+              <span class="seminar-tag">Governance · Community</span>
+            </div>
+          </div>
+          <div class="seminar-item">
+            <div class="seminar-date">Upcoming</div>
+            <div>
+              <div class="seminar-title">Interchain Politics: Sovereignty, Validators, and the Commons</div>
+              <div class="seminar-desc">A seminar examining the political structure of Cosmos — who holds power in a network of sovereign chains, what validator sets mean for governance, and what it would mean for blockchain infrastructure to be publicly accountable.</div>
+              <span class="seminar-tag">Politics · Infrastructure · Cosmos</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="journal">
+    <div class="container reveal">
+      <p class="section-label">Forthcoming</p>
+      <h2 class="section-title" style="margin-bottom:40px;">Fork: The Journal of Interchain Theory &amp; Politics</h2>
+      <div class="journal-block">
+        <div style="max-width:560px; position:relative; z-index:1;">
+          <p style="font-size:16px; color:var(--text-muted); line-height:1.75; margin-bottom:20px;">
+            Fork is a forthcoming digital journal dedicated to the theory and politics of decentralized systems. It will publish peer-reviewed work on Interchain governance, crypto civics, the philosophy of decentralization, and the political economy of Web3.
+          </p>
+          <p style="font-size:16px; color:var(--text-muted); line-height:1.75; margin-bottom:20px;">
+            The journal takes its name from the blockchain concept of a fork — the moment when a shared history diverges and two possible futures emerge. We believe this is also a description of the political moment we are in.
+          </p>
+          <p style="font-size:16px; color:var(--text-muted); line-height:1.75; margin-bottom:32px;">
+            Fork will be open access, community-governed, and eventually hosted at <span style="font-family:var(--font-mono); color:var(--text);">fork.netadao.org</span>.
+          </p>
+          <div style="display:flex; gap:16px; flex-wrap:wrap;">
+            <span class="btn btn-outline" style="cursor:default; opacity:0.5;">Journal — Coming Soon</span>
+            <a href="https://github.com/NetaDAOAcademy/CoiningReason" target="_blank" rel="noopener" class="btn btn-outline">CoiningReason on GitHub ↗</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div>
+          <p class="footer-brand">Neta DAO Academy</p>
+          <p class="footer-tagline">An educational subDAO of Neta DAO</p>
+        </div>
+        <ul class="footer-links">
+          <li><a href="index.html">Neta DAO</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="governance.html">Governance</a></li>
+          <li><a href="https://github.com/NetaDAOAcademy" target="_blank" rel="noopener">GitHub</a></li>
+        </ul>
+      </div>
+      <div class="footer-bottom">
+        <p class="footer-copy">© Neta DAO Academy. Free and open educational programs for the Interchain.</p>
+        <p class="footer-copy" style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);">academy.netadao.org — coming soon</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

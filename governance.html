@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Governance — Neta DAO</title>
+  <meta name="description" content="On-chain governance proposals for Neta DAO, loaded live from the DAO DAO indexer on Juno Network." />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .gov-layout {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 64px;
+      align-items: start;
+    }
+    .gov-sidebar { position: sticky; top: 84px; }
+    .sidebar-card {
+      background: var(--bg-panel);
+      border: var(--rule);
+      border-radius: 4px;
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+    .sidebar-card h4 {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .sidebar-card p {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.65;
+      margin-bottom: 14px;
+    }
+    .sidebar-card p:last-child { margin-bottom: 0; }
+    .sidebar-stat {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 10px 0;
+      border-bottom: var(--rule);
+      font-size: 13px;
+    }
+    .sidebar-stat:last-child { border-bottom: none; padding-bottom: 0; }
+    .sidebar-stat-label { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.06em; text-transform: uppercase; }
+    .sidebar-stat-val { font-family: var(--font-mono); font-size: 12px; color: var(--text); }
+    .filter-row { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+    .filter-btn {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border: var(--rule);
+      border-radius: 2px;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .filter-btn:hover, .filter-btn.active { color: var(--text); border-color: var(--text-muted); }
+    .proposal-item { cursor: pointer; }
+    .proposal-item:hover .proposal-title { color: var(--blue); }
+    @media (max-width: 900px) {
+      .gov-layout { grid-template-columns: 1fr; }
+      .gov-sidebar { position: static; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="site-nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">
+        <div class="nav-logo-n"><span>N</span></div>
+        Neta DAO
+      </a>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="governance.html" class="active">Governance</a></li>
+        <li><a href="academy.html">Academy</a></li>
+        <li><a href="https://daodao.zone/dao/juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6" target="_blank" rel="noopener" class="nav-cta">DAO DAO ↗</a></li>
+      </ul>
+      <button class="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
+    </div>
+  </nav>
+
+  <section class="hero" style="padding-top:140px; padding-bottom:64px;">
+    <div class="container">
+      <p class="hero-eyebrow">On-chain · Live from Juno</p>
+      <h1>Governance <span class="grad-text">Proposals</span></h1>
+      <p class="hero-sub">Every decision Neta DAO makes is recorded on the Juno blockchain. Proposals below are loaded live from the DAO DAO indexer. Click any proposal to view the full text and vote record.</p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="container">
+      <div class="gov-layout">
+        <div>
+          <div class="filter-row">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="open">Open</button>
+            <button class="filter-btn" data-filter="passed">Passed</button>
+            <button class="filter-btn" data-filter="executed">Executed</button>
+            <button class="filter-btn" data-filter="failed">Failed / Rejected</button>
+          </div>
+          <div id="proposals-main"></div>
+        </div>
+        <aside class="gov-sidebar">
+          <div class="sidebar-card">
+            <h4>How governance works</h4>
+            <p>Proposals require a $NETA deposit to submit. Voting is open to all staked $NETA holders for 5 days. A majority threshold with 10% quorum is required to pass.</p>
+            <p>Passed proposals are executed by the Executor subDAO after the voting period closes.</p>
+            <a href="about.html" class="btn btn-outline" style="font-size:11px; padding:8px 16px;">DAO Structure →</a>
+          </div>
+          <div class="sidebar-card">
+            <h4>DAO Parameters</h4>
+            <div class="sidebar-stat"><span class="sidebar-stat-label">Quorum</span><span class="sidebar-stat-val">10%</span></div>
+            <div class="sidebar-stat"><span class="sidebar-stat-label">Threshold</span><span class="sidebar-stat-val">Majority</span></div>
+            <div class="sidebar-stat"><span class="sidebar-stat-label">Voting Period</span><span class="sidebar-stat-val">5 days</span></div>
+            <div class="sidebar-stat"><span class="sidebar-stat-label">Unstaking</span><span class="sidebar-stat-val">~91 days</span></div>
+            <div class="sidebar-stat"><span class="sidebar-stat-label">Revoting</span><span class="sidebar-stat-val">Allowed</span></div>
+          </div>
+          <div class="sidebar-card">
+            <h4>External links</h4>
+            <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px;">
+              <a href="https://daodao.zone/dao/juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6/proposals" target="_blank" rel="noopener" style="font-family:var(--font-mono);font-size:11px;color:var(--blue);">DAO DAO — Full proposal list ↗</a>
+              <a href="https://github.com/netadao/organizational-docs" target="_blank" rel="noopener" style="font-family:var(--font-mono);font-size:11px;color:var(--blue);">Organizational Docs on GitHub ↗</a>
+              <a href="https://www.mintscan.io/juno/address/juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6" target="_blank" rel="noopener" style="font-family:var(--font-mono);font-size:11px;color:var(--blue);">Mintscan — DAO address ↗</a>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div>
+          <p class="footer-brand">Neta DAO</p>
+          <p class="footer-tagline">A public institution for the Interchain</p>
+        </div>
+        <ul class="footer-links">
+          <li><a href="about.html">About</a></li>
+          <li><a href="governance.html">Governance</a></li>
+          <li><a href="academy.html">Academy</a></li>
+          <li><a href="https://github.com/netadao" target="_blank" rel="noopener">GitHub</a></li>
+          <li><a href="https://daodao.zone/dao/juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6" target="_blank" rel="noopener">DAO DAO</a></li>
+        </ul>
+      </div>
+      <div class="footer-bottom">
+        <p class="footer-copy">© Neta DAO. A nonprofit organization. On-chain. Open source.</p>
+        <p class="footer-copy" style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);">juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script>
+    window.NetaDAO.loadProposals('#proposals-main', 50);
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const filter = btn.dataset.filter;
+        document.querySelectorAll('.proposal-item').forEach(item => {
+          if (filter === 'all') { item.style.display = ''; return; }
+          const badge = item.querySelector('.badge');
+          const text = badge ? badge.textContent.toLowerCase() : '';
+          const match = filter === 'failed'
+            ? (text.includes('fail') || text.includes('reject'))
+            : text.includes(filter);
+          item.style.display = match ? '' : 'none';
+        });
+      });
+    });
+  </script>
+</body>
+</html>
