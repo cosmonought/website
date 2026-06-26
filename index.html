@@ -32,17 +32,26 @@
     </div>
   </nav>
 
-  <!-- ── Hero — two-panel split ── -->
+  <!-- ── Hero — text LEFT, logo RIGHT ── -->
   <div class="hero-grid">
+    <div class="hero-text-panel">
+      <p class="hero-eyebrow">Interchain · Nonprofit · On-chain</p>
+      <h1>Public blockchains deserve<br><span class="grad-text">public institutions.</span></h1>
+      <p class="hero-sub">Neta DAO is a nonprofit organization serving the Cosmos ecosystem and the Interchain at large — through validator infrastructure, on-chain governance, and open educational programs.</p>
+      <div class="hero-actions">
+        <a href="about.html" class="btn btn-primary">Our Mission</a>
+        <a href="governance.html" class="btn btn-outline">Governance</a>
+        <a href="https://daodao.zone/dao/juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6" target="_blank" rel="noopener" class="btn btn-outline">DAO DAO ↗</a>
+      </div>
+    </div>
     <div class="hero-logo-panel">
-      <!-- Large N logo as SVG panel art -->
       <svg viewBox="0 0 320 320" width="320" height="320" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;max-height:100%;">
         <rect width="320" height="320" fill="#0f0f0f"/>
-        <!-- Gradient bar — the signature element -->
-        <rect x="0" y="128" width="320" height="64" fill="url(#hg)"/>
-        <!-- The N letterform -->
-        <text x="160" y="232" text-anchor="middle" font-family="'Barlow Condensed', sans-serif" font-weight="900" font-size="280" fill="#f2f0eb" letter-spacing="-4">N</text>
-        <!-- Thin registration marks at corners — 2000AD style -->
+        <!-- Gradient bar cuts through the N -->
+        <rect x="0" y="124" width="320" height="72" fill="url(#hg)"/>
+        <!-- N letterform on top of gradient -->
+        <text x="160" y="234" text-anchor="middle" font-family="'Barlow Condensed', sans-serif" font-weight="900" font-size="284" fill="#f2f0eb" letter-spacing="-4">N</text>
+        <!-- Registration marks -->
         <line x1="0" y1="0" x2="20" y2="0" stroke="#333" stroke-width="1"/>
         <line x1="0" y1="0" x2="0" y2="20" stroke="#333" stroke-width="1"/>
         <line x1="320" y1="0" x2="300" y2="0" stroke="#333" stroke-width="1"/>
@@ -58,16 +67,6 @@
           </linearGradient>
         </defs>
       </svg>
-    </div>
-    <div class="hero-text-panel">
-      <p class="hero-eyebrow">Interchain · Nonprofit · On-chain</p>
-      <h1 class="hero">Public blockchains deserve<br><span class="grad-text">public institutions.</span></h1>
-      <p class="hero-sub">Neta DAO is a nonprofit organization serving the Cosmos ecosystem and the Interchain at large — through validator infrastructure, on-chain governance, and open educational programs.</p>
-      <div class="hero-actions">
-        <a href="about.html" class="btn btn-primary">Our Mission</a>
-        <a href="governance.html" class="btn btn-outline">Governance</a>
-        <a href="https://daodao.zone/dao/juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6" target="_blank" rel="noopener" class="btn btn-outline">DAO DAO ↗</a>
-      </div>
     </div>
   </div>
 
@@ -114,52 +113,21 @@
     </div>
   </div>
 
-  <!-- ── Recent Governance ── -->
-  <div class="panel reveal">
-    <div class="two-col" style="border-top:none;">
-      <div style="border-right:var(--panel-border);">
-        <div class="panel-inner">
-          <p class="section-label">On-chain activity</p>
-          <h2 class="section-title">Recent Governance</h2>
-          <p class="section-body">Every decision Neta DAO makes is recorded on the Juno blockchain and loaded live from the DAO DAO indexer.</p>
-          <div style="margin-top:28px;">
-            <a href="governance.html" class="btn btn-outline">All proposals →</a>
-          </div>
-        </div>
-      </div>
-      <div>
-        <div id="proposals-home" style="padding:0 0;"></div>
-      </div>
-    </div>
-  </div>
+
 
   <!-- ── Academy ── -->
   <div class="panel panel-ink reveal">
-    <div class="panel-inner" style="border-bottom:var(--panel-border);">
+    <div class="panel-inner">
       <p class="section-label">Educational Initiative</p>
-      <h2 class="section-title">Neta DAO Academy</h2>
-      <p class="section-body">An educational subDAO approaching Web3 as political and philosophical terrain — with special attention to post-Lacanian philosophy and the theory of decentralized governance. Currently running: <em>Sex, and/or Love: Psychoanalysis and the Science of Desire.</em></p>
-    </div>
-    <div class="academy-sub-items">
-      <div class="academy-item">
-        <h4>Coining Reason</h4>
-        <p>A free public discussion series exploring Web3 through economics, philosophy, politics, psychoanalysis, law, ecology, and art. No prerequisites.</p>
+      <h2 class="section-title">Neta DAO <span class="grad-text">Academy</span></h2>
+      <p class="section-body" style="margin-bottom:28px;">An educational subDAO approaching Web3 as political and philosophical terrain — with special attention to post-Lacanian philosophy and the theory of decentralized governance.</p>
+      <!-- Current series callout -->
+      <div style="border:1px solid #333;padding:20px 24px;margin-bottom:28px;background:#0a0a0a;">
+        <p style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--pink);margin-bottom:8px;">● Currently Running</p>
+        <p style="font-family:var(--font-display);font-size:22px;font-weight:900;text-transform:uppercase;margin-bottom:4px;">Sex, and/or Love</p>
+        <p style="font-family:var(--font-mono);font-size:11px;color:var(--paper-dim);">Psychoanalysis and the Science of Desire · Free · Open to all</p>
       </div>
-      <div class="academy-item">
-        <h4>Weekly Meetings</h4>
-        <p>Open Congressional meetings where DAO members discuss proposals, direction, and ideas — the public record of the DAO in action.</p>
-      </div>
-      <div class="academy-item">
-        <h4>Fork: The Journal</h4>
-        <p>A forthcoming digital journal of Interchain Theory and Politics — peer-reviewed, open access, community-governed.</p>
-      </div>
-      <div class="academy-item">
-        <h4>Free Always</h4>
-        <p>Every program, every seminar, every meeting is free and open to the public. We believe intellectual life is a public good.</p>
-      </div>
-    </div>
-    <div class="panel-inner-sm" style="border-top:var(--panel-border);">
-      <a href="academy.html" class="btn btn-outline">Visit the Academy →</a>
+      <a href="https://academy.netadao.org" class="btn btn-outline">Visit the Academy →</a>
     </div>
   </div>
 
@@ -187,8 +155,5 @@
   </footer>
 
   <script src="js/main.js"></script>
-  <script>
-    window.NetaDAO.loadProposals('#proposals-home', 6);
-  </script>
 </body>
 </html>
