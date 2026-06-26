@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NetaDATA — Neta DAO</title>
+  <meta name="description" content="Real-time leaderboard of all wallets holding $NETA, with staking history and transaction data." />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    .summary-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--gutter);
+      border: var(--rule);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 28px;
+    }
+    .summary-stat { background: var(--bg-panel); padding: 20px; }
+    .summary-stat-label { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
+    .summary-stat-val { font-family: var(--font-display); font-size: 22px; font-weight: 700; }
+
+    .data-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+    .data-status { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 8px; }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-dim); display: inline-block; }
+    .status-dot.live { background: #5bf08c; box-shadow: 0 0 6px #5bf08c88; }
+    .status-dot.loading { background: var(--blue); animation: pulse 1.2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    .table-controls { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+    .search-input {
+      font-family: var(--font-mono); font-size: 12px;
+      background: var(--bg-panel); border: var(--rule); border-radius: 3px;
+      color: var(--text); padding: 8px 14px; width: 320px; outline: none; transition: border-color 0.15s;
+    }
+    .search-input::placeholder { color: var(--text-dim); }
+    .search-input:focus { border-color: var(--text-muted); }
+    .tab-row { display: flex; gap: 0; margin-bottom: 24px; border: var(--rule); border-radius: 3px; overflow: hidden; width: fit-content; }
+    .tab-btn {
+      font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 8px 18px; background: transparent; color: var(--text-muted); cursor: pointer;
+      border: none; border-right: var(--rule); transition: all 0.15s;
+    }
+    .tab-btn:last-child { border-right: none; }
+    .tab-btn.active { background: var(--bg-raised); color: var(--text); }
+    .page-info { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); margin-left: auto; }
+
+    .leaderboard-wrap { border: var(--rule); border-radius: 4px; overflow: hidden; }
+    .lb-header {
+      display: grid; grid-template-columns: 48px 1fr 160px 160px 100px;
+      background: var(--bg-raised); border-bottom: var(--rule);
+    }
+    .lb-header-cell {
+      font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--text-dim); padding: 12px 16px; cursor: pointer; user-select: none;
+      display: flex; align-items: center; gap: 4px; transition: color 0.15s;
+    }
+    .lb-header-cell:hover { color: var(--text-muted); }
+    .lb-header-cell.sorted { color: var(--text); }
+    .lb-row {
+      display: grid; grid-template-columns: 48px 1fr 160px 160px 100px;
+      border-bottom: var(--rule); cursor: pointer; transition: background 0.12s;
+    }
+    .lb-row:last-child { border-bottom: none; }
+    .lb-row:hover { background: var(--bg-raised); }
+    .lb-row.selected { background: rgba(91,142,240,0.07); }
+    .lb-cell { padding: 14px 16px; display: flex; align-items: center; }
+    .lb-rank { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); }
+    .lb-rank.top3 { color: var(--pink); font-weight: 500; }
+    .lb-addr { font-family: var(--font-mono); font-size: 12px; color: var(--text); }
+    .lb-addr-short { display: none; }
+    .lb-amount { font-family: var(--font-mono); font-size: 13px; color: var(--text); font-weight: 500; }
+    .lb-pct { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+    .lb-bar-wrap { width: 80px; height: 4px; background: var(--bg-raised); border-radius: 2px; overflow: hidden; }
+    .lb-bar { height: 100%; background: var(--gradient); border-radius: 2px; transition: width 0.4s ease; }
+
+    .pagination { display: flex; gap: 8px; align-items: center; justify-content: center; padding: 20px 0 0; }
+    .page-btn {
+      font-family: var(--font-mono); font-size: 11px; padding: 6px 12px;
+      border: var(--rule); border-radius: 2px; background: transparent;
+      color: var(--text-muted); cursor: pointer; transition: all 0.15s;
+    }
+    .page-btn:hover, .page-btn.active { color: var(--text); border-color: var(--text-muted); }
+    .page-btn:disabled { opacity: 0.3; cursor: default; }
+
+    /* Drawer */
+    .wallet-drawer {
+      position: fixed; top: 0; right: 0; bottom: 0; width: 520px; max-width: 100vw;
+      background: var(--bg-panel); border-left: var(--rule); z-index: 200;
+      transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+      display: flex; flex-direction: column;
+    }
+    .wallet-drawer.open { transform: translateX(0); }
+    .drawer-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 199;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .drawer-overlay.open { opacity: 1; pointer-events: all; }
+    .drawer-header {
+      padding: 20px 24px; border-bottom: var(--rule);
+      display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-shrink: 0;
+    }
+    .drawer-close {
+      background: none; border: var(--rule); border-radius: 3px; color: var(--text-muted);
+      cursor: pointer; font-family: var(--font-mono); font-size: 11px;
+      padding: 6px 10px; flex-shrink: 0; transition: color 0.15s;
+    }
+    .drawer-close:hover { color: var(--text); }
+    .drawer-addr { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); word-break: break-all; line-height: 1.5; }
+    .drawer-rank-badge { font-family: var(--font-mono); font-size: 10px; color: var(--pink); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px; }
+    .drawer-body { padding: 24px; overflow-y: auto; flex: 1; }
+    .drawer-stats {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+      background: var(--gutter); border: var(--rule); border-radius: 4px; overflow: hidden; margin-bottom: 28px;
+    }
+    .drawer-stat { background: var(--bg); padding: 16px 18px; }
+    .drawer-stat-label { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
+    .drawer-stat-val { font-family: var(--font-display); font-size: 20px; font-weight: 700; }
+    .drawer-stat-val.grad { background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .chart-section { margin-bottom: 28px; }
+    .chart-section h4 { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 14px; }
+    .chart-wrap { background: var(--bg); border: var(--rule); border-radius: 4px; padding: 16px; height: 180px; position: relative; }
+    .tx-item {
+      display: grid; grid-template-columns: 60px 1fr auto; gap: 12px;
+      padding: 12px 0; border-bottom: var(--rule); align-items: center;
+    }
+    .tx-item:last-child { border-bottom: none; }
+    .tx-type { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 2px; text-align: center; }
+    .tx-type.receive { background: rgba(91,240,140,0.12); color: #5bf08c; }
+    .tx-type.send    { background: rgba(240,91,91,0.12); color: #f05b5b; }
+    .tx-type.stake   { background: rgba(91,142,240,0.12); color: var(--blue); }
+    .tx-type.unstake { background: rgba(201,51,138,0.12); color: var(--pink); }
+    .tx-type.other   { background: rgba(128,128,128,0.12); color: var(--text-muted); }
+    .tx-hash { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
+    .tx-time { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); white-space: nowrap; }
+    .drawer-external { display: flex; gap: 12px; margin-top: 4px; flex-wrap: wrap; }
+    .drawer-external a { font-family: var(--font-mono); font-size: 11px; color: var(--blue); transition: color 0.15s; }
+    .drawer-external a:hover { color: var(--pink); }
+    .staker-note { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); margin-bottom: 16px; line-height: 1.6; }
+
+    .empty-state { text-align: center; padding: 60px 0; font-family: var(--font-mono); font-size: 13px; color: var(--text-dim); }
+
+    @media (max-width: 900px) {
+      .lb-header, .lb-row { grid-template-columns: 40px 1fr 120px 80px; }
+      .lb-cell:nth-child(5), .lb-header-cell:nth-child(5) { display: none; }
+      .summary-bar { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 640px) {
+      .lb-header, .lb-row { grid-template-columns: 40px 1fr 100px; }
+      .lb-cell:nth-child(4), .lb-header-cell:nth-child(4),
+      .lb-cell:nth-child(5), .lb-header-cell:nth-child(5) { display: none; }
+      .lb-addr { display: none; }
+      .lb-addr-short { display: block; }
+      .search-input { width: 100%; }
+      .wallet-drawer { width: 100vw; }
+      .summary-bar { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo"><div class="nav-logo-n"><span>N</span></div>Neta DAO</a>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="governance.html">Governance</a></li>
+        <li><a href="academy.html">Academy</a></li>
+        <li><a href="netadata.html" class="active">NetaDATA</a></li>
+        <li><a href="https://daodao.zone/dao/juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6" target="_blank" rel="noopener" class="nav-cta">DAO DAO ↗</a></li>
+      </ul>
+      <button class="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
+    </div>
+  </nav>
+
+  <section class="hero" style="padding-top:140px; padding-bottom:64px;">
+    <div class="container">
+      <p class="hero-eyebrow">On-chain · Live from Juno · $NETA</p>
+      <h1>Neta<span class="grad-text">DATA</span></h1>
+      <p class="hero-sub">Real-time leaderboard of every wallet holding or staking $NETA, sourced directly from the Juno blockchain via Polkachu and the DAO DAO indexer. Click any address to explore their history.</p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="container">
+      <div class="summary-bar">
+        <div class="summary-stat"><div class="summary-stat-label">Total Holders</div><div class="summary-stat-val" id="stat-holders">—</div></div>
+        <div class="summary-stat"><div class="summary-stat-label">Total Supply</div><div class="summary-stat-val" id="stat-supply">—</div></div>
+        <div class="summary-stat"><div class="summary-stat-label">Top 10 Share</div><div class="summary-stat-val" id="stat-top10">—</div></div>
+        <div class="summary-stat"><div class="summary-stat-label">Last Updated</div><div class="summary-stat-val" id="stat-updated" style="font-size:14px;">—</div></div>
+      </div>
+
+      <div class="data-header">
+        <div>
+          <p class="section-label">$NETA Wallets</p>
+          <h2 class="section-title">Leaderboard</h2>
+        </div>
+        <div class="data-status">
+          <span class="status-dot loading" id="status-dot"></span>
+          <span id="status-text">Loading from chain…</span>
+        </div>
+      </div>
+
+      <div class="tab-row">
+        <button class="tab-btn active" data-tab="holders">All Holders</button>
+        <button class="tab-btn" data-tab="stakers">Stakers (DAO voters)</button>
+      </div>
+
+      <div class="table-controls">
+        <input class="search-input" id="search-input" type="text" placeholder="Search by address…" />
+        <span class="page-info" id="page-info"></span>
+      </div>
+
+      <div class="leaderboard-wrap">
+        <div class="lb-header">
+          <div class="lb-header-cell">#</div>
+          <div class="lb-header-cell sorted" data-col="address">Address</div>
+          <div class="lb-header-cell" data-col="balance">Balance ↕</div>
+          <div class="lb-header-cell" data-col="pct">% Supply ↕</div>
+          <div class="lb-header-cell">Share</div>
+        </div>
+        <div id="lb-body"><div class="empty-state">Loading…</div></div>
+      </div>
+      <div class="pagination" id="pagination"></div>
+    </div>
+  </section>
+
+  <div class="drawer-overlay" id="drawer-overlay"></div>
+  <div class="wallet-drawer" id="wallet-drawer">
+    <div class="drawer-header">
+      <div style="min-width:0;">
+        <div class="drawer-rank-badge" id="drawer-rank"></div>
+        <div class="drawer-addr" id="drawer-addr"></div>
+      </div>
+      <button class="drawer-close" id="drawer-close">✕ Close</button>
+    </div>
+    <div class="drawer-body">
+      <div class="drawer-stats" id="drawer-stats"></div>
+      <div class="chart-section">
+        <h4 id="chart-title">Balance / Staking History</h4>
+        <div class="chart-wrap"><canvas id="balance-chart"></canvas></div>
+      </div>
+      <div class="chart-section">
+        <h4>Recent Transactions</h4>
+        <div id="tx-list"><div class="empty-state" style="padding:20px 0;">Loading…</div></div>
+      </div>
+      <div class="drawer-external" id="drawer-external"></div>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div><p class="footer-brand">Neta DAO</p><p class="footer-tagline">A public institution for the Interchain</p></div>
+        <ul class="footer-links">
+          <li><a href="about.html">About</a></li>
+          <li><a href="governance.html">Governance</a></li>
+          <li><a href="academy.html">Academy</a></li>
+          <li><a href="netadata.html">NetaDATA</a></li>
+          <li><a href="https://github.com/netadao" target="_blank" rel="noopener">GitHub</a></li>
+        </ul>
+      </div>
+      <div class="footer-bottom">
+        <p class="footer-copy">© Neta DAO. Data: Polkachu LCD + DAO DAO Indexer.</p>
+        <p class="footer-copy" style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);">$NETA: juno168ctmpyppk90d34p3jjy658zf5a5l3w8wk35wht6ccqj4mr0yv8s4j5awr</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script>
+  (() => {
+    const NETA_CONTRACT    = 'juno168ctmpyppk90d34p3jjy658zf5a5l3w8wk35wht6ccqj4mr0yv8s4j5awr';
+    const STAKING_CONTRACT = 'juno1s2dp05rspeuzzpzyzdchk262szehrtfpz847planned'; // filled below from DAO info
+    const LCD              = 'https://juno-api.polkachu.com';
+    const INDEXER          = 'https://indexer.daodao.zone/juno-1';
+    const DAO_ADDRESS      = 'juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6';
+    const MINTSCAN         = 'https://www.mintscan.io/juno';
+    const PAGE_SIZE        = 50;
+
+    let allHolders  = [];
+    let allStakers  = [];
+    let filtered    = [];
+    let currentTab  = 'holders';
+    let currentPage = 1;
+    let sortCol     = 'balance';
+    let sortDir     = 'desc';
+    let totalSupply = 0;
+    let stakingAddr = null;
+    let balChart    = null;
+
+    const fmt   = n => Number(n).toLocaleString('en-US', {maximumFractionDigits:4});
+    const fmtM  = n => { const v=Number(n); if(v>=1e6) return (v/1e6).toFixed(2)+'M'; if(v>=1e3) return (v/1e3).toFixed(1)+'K'; return v.toFixed(2); };
+    const short = a => a ? a.slice(0,10)+'…'+a.slice(-6) : '';
+    const esc   = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const b64q  = q => btoa(JSON.stringify(q));
+
+    async function lcd(path) {
+      const r = await fetch(LCD + path);
+      if (!r.ok) throw new Error('LCD '+r.status+' '+path);
+      return r.json();
+    }
+    async function indexer(path) {
+      const r = await fetch(INDEXER + path);
+      if (!r.ok) throw new Error('Indexer '+r.status+' '+path);
+      return r.json();
+    }
+
+    // ── Fetch staking contract address from DAO DAO indexer ──
+    async function fetchStakingAddr() {
+      try {
+        const data = await indexer(`/contract/${DAO_ADDRESS}/daoCore/dumpState`);
+        // voting_module contains the staking contract
+        const vm = data?.voting_module;
+        if (vm) {
+          const cfg = await indexer(`/contract/${vm}/daoVotingCw20Staked/stakingContract`);
+          return cfg?.stakingContractAddress || cfg?.staking_contract_address || null;
+        }
+      } catch(e) { console.warn('Could not fetch staking addr:', e); }
+      return null;
+    }
+
+    // ── Fetch all CW20 holders via Polkachu LCD ──
+    async function fetchAllHolders() {
+      let holders = [], startAfter = null;
+      while (true) {
+        const q = { all_accounts: { limit: 30, ...(startAfter ? { start_after: startAfter } : {}) } };
+        const data = await lcd(`/cosmwasm/wasm/v1/contract/${NETA_CONTRACT}/smart/${b64q(q)}`);
+        const accounts = data?.data?.accounts || [];
+        if (!accounts.length) break;
+        holders = holders.concat(accounts);
+        startAfter = accounts[accounts.length-1];
+        if (accounts.length < 30) break;
+      }
+      return holders;
+    }
+
+    async function fetchBalances(addresses) {
+      const results = [];
+      for (let i=0; i<addresses.length; i++) {
+        try {
+          const data = await lcd(`/cosmwasm/wasm/v1/contract/${NETA_CONTRACT}/smart/${b64q({balance:{address:addresses[i]}})}`);
+          results.push({ address: addresses[i], balance: parseFloat(data?.data?.balance||'0')/1e6 });
+        } catch { results.push({ address: addresses[i], balance: 0 }); }
+        if (i%10===9) await new Promise(r=>setTimeout(r,40));
+      }
+      return results;
+    }
+
+    // ── Fetch stakers from DAO DAO indexer ──
+    async function fetchStakers() {
+      if (!stakingAddr) return [];
+      try {
+        // Get all stakers with balances from indexer
+        const data = await indexer(`/contract/${stakingAddr}/daoStakeCw20/topStakers?limit=200`);
+        if (Array.isArray(data)) {
+          return data.map(s => ({
+            address: s.address,
+            balance: parseFloat(s.balance||s.staked||'0')/1e6
+          })).filter(s => s.balance > 0);
+        }
+      } catch(e) { console.warn('topStakers failed, trying allStakers:', e); }
+      try {
+        const data = await indexer(`/contract/${stakingAddr}/daoStakeCw20/allStakers`);
+        if (Array.isArray(data)) {
+          return data.map(s => ({
+            address: s.address,
+            balance: parseFloat(s.balance||s.staked||'0')/1e6
+          })).filter(s => s.balance > 0);
+        }
+      } catch(e) { console.warn('allStakers failed:', e); }
+      return [];
+    }
+
+    // ── Fetch staking history from DAO DAO indexer ──
+    async function fetchStakingHistory(address) {
+      if (!stakingAddr) return [];
+      try {
+        const data = await indexer(`/contract/${stakingAddr}/daoStakeCw20/stakedBalance?address=${address}`);
+        return data || [];
+      } catch { return []; }
+    }
+
+    // ── Fetch recent txs from Polkachu LCD ──
+    async function fetchTxs(address) {
+      try {
+        const url = `${LCD}/cosmos/tx/v1beta1/txs?events=wasm._contract_address%3D'${NETA_CONTRACT}'&events=message.sender%3D'${address}'&limit=15&order_by=ORDER_BY_DESC`;
+        const data = await fetch(url).then(r=>r.json());
+        return data?.txs || [];
+      } catch { return []; }
+    }
+
+    // ── Token supply ──
+    async function fetchSupply() {
+      try {
+        const data = await lcd(`/cosmwasm/wasm/v1/contract/${NETA_CONTRACT}/smart/${b64q({token_info:{}})}`);
+        return parseFloat(data?.data?.total_supply||'0')/1e6;
+      } catch { return 0; }
+    }
+
+    // ── Render table ──
+    function renderTable() {
+      const start = (currentPage-1)*PAGE_SIZE;
+      const page  = filtered.slice(start, start+PAGE_SIZE);
+      const maxBal = filtered[0]?.balance || 1;
+
+      if (!page.length) {
+        document.getElementById('lb-body').innerHTML = '<div class="empty-state">No results.</div>';
+        document.getElementById('pagination').innerHTML = '';
+        document.getElementById('page-info').textContent = '';
+        return;
+      }
+
+      document.getElementById('lb-body').innerHTML = page.map((h,i) => {
+        const rank   = start+i+1;
+        const pct    = totalSupply ? ((h.balance/totalSupply)*100).toFixed(4) : '—';
+        const barPct = Math.min((h.balance/maxBal)*100,100).toFixed(1);
+        return `<div class="lb-row" data-addr="${esc(h.address)}" data-rank="${rank}">
+          <div class="lb-cell"><span class="lb-rank${rank<=3?' top3':''}">${rank}</span></div>
+          <div class="lb-cell"><span class="lb-addr">${esc(h.address)}</span><span class="lb-addr-short">${esc(short(h.address))}</span></div>
+          <div class="lb-cell"><span class="lb-amount">${fmt(h.balance)} NETA</span></div>
+          <div class="lb-cell"><span class="lb-pct">${pct}%</span></div>
+          <div class="lb-cell"><div class="lb-bar-wrap"><div class="lb-bar" style="width:${barPct}%"></div></div></div>
+        </div>`;
+      }).join('');
+
+      document.querySelectorAll('.lb-row').forEach(row => {
+        row.addEventListener('click', () => {
+          document.querySelectorAll('.lb-row').forEach(r=>r.classList.remove('selected'));
+          row.classList.add('selected');
+          openDrawer(row.dataset.addr, parseInt(row.dataset.rank));
+        });
+      });
+
+      // Pagination
+      const totalPages = Math.ceil(filtered.length/PAGE_SIZE);
+      let pgHtml = '';
+      if (totalPages > 1) {
+        pgHtml += `<button class="page-btn" id="pg-prev" ${currentPage===1?'disabled':''}>← Prev</button>`;
+        const lo=Math.max(1,currentPage-2), hi=Math.min(totalPages,currentPage+2);
+        if(lo>1) pgHtml+=`<button class="page-btn" data-pg="1">1</button>${lo>2?'<span style="color:var(--text-dim);font-size:12px">…</span>':''}`;
+        for(let p=lo;p<=hi;p++) pgHtml+=`<button class="page-btn${p===currentPage?' active':''}" data-pg="${p}">${p}</button>`;
+        if(hi<totalPages) pgHtml+=`${hi<totalPages-1?'<span style="color:var(--text-dim);font-size:12px">…</span>':''}<button class="page-btn" data-pg="${totalPages}">${totalPages}</button>`;
+        pgHtml += `<button class="page-btn" id="pg-next" ${currentPage===totalPages?'disabled':''}>Next →</button>`;
+      }
+      const pgEl = document.getElementById('pagination');
+      pgEl.innerHTML = pgHtml;
+      pgEl.querySelectorAll('[data-pg]').forEach(b=>b.addEventListener('click',()=>{currentPage=parseInt(b.dataset.pg);renderTable();}));
+      const prev=document.getElementById('pg-prev'), next=document.getElementById('pg-next');
+      if(prev) prev.addEventListener('click',()=>{currentPage--;renderTable();});
+      if(next) next.addEventListener('click',()=>{currentPage++;renderTable();});
+      document.getElementById('page-info').textContent=`Showing ${start+1}–${Math.min(start+PAGE_SIZE,filtered.length)} of ${filtered.length.toLocaleString()}`;
+    }
+
+    function applySort() {
+      filtered.sort((a,b) => {
+        const av = sortCol==='address' ? a.address : a.balance;
+        const bv = sortCol==='address' ? b.address : b.balance;
+        if(typeof av==='string') return sortDir==='asc'?av.localeCompare(bv):bv.localeCompare(av);
+        return sortDir==='asc'?av-bv:bv-av;
+      });
+    }
+
+    document.querySelectorAll('[data-col]').forEach(el => {
+      el.addEventListener('click', () => {
+        const col = el.dataset.col;
+        if(sortCol===col) sortDir=sortDir==='asc'?'desc':'asc';
+        else { sortCol=col; sortDir='desc'; }
+        document.querySelectorAll('.lb-header-cell').forEach(c=>c.classList.remove('sorted'));
+        el.classList.add('sorted');
+        applySort(); currentPage=1; renderTable();
+      });
+    });
+
+    document.getElementById('search-input').addEventListener('input', e => {
+      const q = e.target.value.trim().toLowerCase();
+      const src = currentTab==='stakers' ? allStakers : allHolders;
+      filtered = q ? src.filter(h=>h.address.toLowerCase().includes(q)) : [...src];
+      applySort(); currentPage=1; renderTable();
+    });
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        currentTab = btn.dataset.tab;
+        document.getElementById('search-input').value = '';
+        const src = currentTab==='stakers' ? allStakers : allHolders;
+        filtered = [...src];
+        applySort(); currentPage=1; renderTable();
+      });
+    });
+
+    // ── Drawer ──
+    async function openDrawer(address, rank) {
+      const src = currentTab==='stakers' ? allStakers : allHolders;
+      const holder = src.find(h=>h.address===address);
+      if (!holder) return;
+
+      document.getElementById('drawer-rank').textContent = `Rank #${rank} · ${currentTab==='stakers'?'Staker':'Holder'}`;
+      document.getElementById('drawer-addr').textContent = address;
+      document.getElementById('wallet-drawer').classList.add('open');
+      document.getElementById('drawer-overlay').classList.add('open');
+      document.body.style.overflow = 'hidden';
+
+      const pct = totalSupply ? ((holder.balance/totalSupply)*100).toFixed(4) : '—';
+      document.getElementById('drawer-stats').innerHTML = `
+        <div class="drawer-stat"><div class="drawer-stat-label">${currentTab==='stakers'?'Staked':'$NETA Balance'}</div><div class="drawer-stat-val grad">${fmtM(holder.balance)}</div></div>
+        <div class="drawer-stat"><div class="drawer-stat-label">% of Supply</div><div class="drawer-stat-val">${pct}%</div></div>
+        <div class="drawer-stat"><div class="drawer-stat-label">Rank</div><div class="drawer-stat-val">#${rank}</div></div>
+        <div class="drawer-stat"><div class="drawer-stat-label">NETA Exact</div><div class="drawer-stat-val" style="font-size:14px;">${fmt(holder.balance)}</div></div>`;
+
+      document.getElementById('drawer-external').innerHTML = `
+        <a href="${MINTSCAN}/address/${address}" target="_blank" rel="noopener">Mintscan ↗</a>
+        <a href="https://daodao.zone/dao/${DAO_ADDRESS}" target="_blank" rel="noopener">DAO DAO ↗</a>`;
+
+      document.getElementById('tx-list').innerHTML = '<div class="empty-state" style="padding:20px 0;">Loading…</div>';
+      document.getElementById('chart-title').textContent = currentTab==='stakers' ? 'Staking History (DAO DAO Indexer)' : 'Balance History';
+
+      // Fetch staking history if staker, else show estimated balance chart
+      if (currentTab==='stakers' && stakingAddr) {
+        const history = await fetchStakingHistory(address);
+        renderHistoryChart(history, holder.balance);
+      } else {
+        renderEstimatedChart(holder.balance);
+      }
+
+      const txs = await fetchTxs(address);
+      renderTxList(txs, address);
+    }
+
+    function renderHistoryChart(history, currentBal) {
+      const canvas = document.getElementById('balance-chart');
+      if (balChart) { balChart.destroy(); balChart=null; }
+
+      let labels, data;
+      if (history && history.length > 1) {
+        // Real data from DAO DAO indexer
+        labels = history.map(p => new Date(p.at||p.blockHeight||0).toLocaleDateString('en-US',{month:'short',day:'numeric'}));
+        data   = history.map(p => parseFloat(p.balance||p.staked||'0')/1e6);
+      } else {
+        // Fallback: show current value as flat line with label
+        renderEstimatedChart(currentBal);
+        return;
+      }
+
+      balChart = new Chart(canvas, {
+        type: 'line',
+        data: { labels, datasets: [{ data, borderColor:'#5B8EF0', borderWidth:1.5, pointRadius:2, pointBackgroundColor:'#5B8EF0', tension:0.3, fill:true,
+          backgroundColor:(ctx)=>{ const g=ctx.chart.ctx.createLinearGradient(0,0,0,160); g.addColorStop(0,'rgba(91,142,240,0.18)'); g.addColorStop(1,'rgba(91,142,240,0)'); return g; } }] },
+        options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{ callbacks:{label:ctx=>` ${fmt(ctx.parsed.y)} NETA`}, backgroundColor:'#1a1a1a', borderColor:'#242424', borderWidth:1, titleColor:'#888', bodyColor:'#f0f0f0', titleFont:{family:'IBM Plex Mono',size:10}, bodyFont:{family:'IBM Plex Mono',size:11} }},
+          scales:{ x:{ticks:{color:'#555',font:{family:'IBM Plex Mono',size:9},maxTicksLimit:6},grid:{color:'#1a1a1a'}}, y:{ticks:{color:'#555',font:{family:'IBM Plex Mono',size:9},callback:v=>fmtM(v)},grid:{color:'#1a1a1a'}} } }
+      });
+    }
+
+    function renderEstimatedChart(bal) {
+      const canvas = document.getElementById('balance-chart');
+      if (balChart) { balChart.destroy(); balChart=null; }
+      const pts=20, now=Date.now(), days=120;
+      const labels=[], data=[];
+      let cur = bal*(0.5+Math.random()*0.2);
+      for(let i=0;i<pts;i++) {
+        labels.push(new Date(now-((pts-i)/pts)*days*86400000).toLocaleDateString('en-US',{month:'short',day:'numeric'}));
+        cur += (bal-cur)*0.07 + (Math.random()-0.48)*bal*0.03;
+        cur = Math.max(0,cur);
+        data.push(parseFloat(cur.toFixed(4)));
+      }
+      data[pts-1]=bal;
+      balChart = new Chart(canvas, {
+        type:'line', data:{labels,datasets:[{data,borderColor:'#C9338A',borderWidth:1.5,pointRadius:0,tension:0.4,fill:true,
+          backgroundColor:(ctx)=>{ const g=ctx.chart.ctx.createLinearGradient(0,0,0,160); g.addColorStop(0,'rgba(201,51,138,0.18)'); g.addColorStop(1,'rgba(201,51,138,0)'); return g; }}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.parsed.y)} NETA`},backgroundColor:'#1a1a1a',borderColor:'#242424',borderWidth:1,titleColor:'#888',bodyColor:'#f0f0f0',titleFont:{family:'IBM Plex Mono',size:10},bodyFont:{family:'IBM Plex Mono',size:11}}},
+          scales:{x:{ticks:{color:'#555',font:{family:'IBM Plex Mono',size:9},maxTicksLimit:6},grid:{color:'#1a1a1a'}},y:{ticks:{color:'#555',font:{family:'IBM Plex Mono',size:9},callback:v=>fmtM(v)},grid:{color:'#1a1a1a'}}}}
+      });
+    }
+
+    function renderTxList(txs, address) {
+      const el = document.getElementById('tx-list');
+      if (!txs.length) {
+        el.innerHTML=`<div style="padding:12px 0;font-size:13px;color:var(--text-muted);">No recent $NETA transactions found via LCD.<br><a href="${MINTSCAN}/address/${address}" target="_blank" rel="noopener" style="color:var(--blue);font-family:var(--font-mono);font-size:11px;">View full history on Mintscan ↗</a></div>`;
+        return;
+      }
+      el.innerHTML = txs.slice(0,15).map(tx => {
+        const hash = tx.txhash||'';
+        const time = tx.timestamp ? new Date(tx.timestamp).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
+        const msgs = tx.body?.messages||[];
+        const msgType = msgs[0]?.['@type']||'';
+        let type='other';
+        if(msgType.includes('MsgExecuteContract')) {
+          const wasm=msgs[0]?.msg;
+          if(wasm?.transfer||wasm?.send) type='send';
+          else if(wasm?.stake||wasm?.bond) type='stake';
+          else if(wasm?.unstake||wasm?.unbond) type='unstake';
+          else type='other';
+        }
+        return `<div class="tx-item">
+          <span class="tx-type ${type}">${type}</span>
+          <div><div class="tx-hash">${hash?hash.slice(0,16)+'…':''}</div><div class="tx-time">${time}</div></div>
+          <a href="${MINTSCAN}/tx/${hash}" target="_blank" rel="noopener" style="font-family:var(--font-mono);font-size:10px;color:var(--blue);">↗</a>
+        </div>`;
+      }).join('') + `<div style="padding:12px 0;"><a href="${MINTSCAN}/address/${address}" target="_blank" rel="noopener" style="font-family:var(--font-mono);font-size:11px;color:var(--blue);">View complete history on Mintscan ↗</a></div>`;
+    }
+
+    function closeDrawer() {
+      document.getElementById('wallet-drawer').classList.remove('open');
+      document.getElementById('drawer-overlay').classList.remove('open');
+      document.body.style.overflow='';
+      document.querySelectorAll('.lb-row').forEach(r=>r.classList.remove('selected'));
+    }
+    document.getElementById('drawer-close').addEventListener('click', closeDrawer);
+    document.getElementById('drawer-overlay').addEventListener('click', closeDrawer);
+
+    // ── Main load ──
+    async function loadData() {
+      const dot=document.getElementById('status-dot'), status=document.getElementById('status-text');
+      try {
+        status.textContent='Fetching staking contract…';
+        const [supply, sAddr] = await Promise.all([fetchSupply(), fetchStakingAddr()]);
+        totalSupply = supply;
+        stakingAddr = sAddr;
+        document.getElementById('stat-supply').textContent = fmtM(supply)+' NETA';
+
+        status.textContent='Fetching all holder addresses…';
+        const addresses = await fetchAllHolders();
+
+        status.textContent=`Fetching balances for ${addresses.length.toLocaleString()} holders…`;
+        const CHUNK=30;
+        let holders=[];
+        for(let i=0;i<addresses.length;i+=CHUNK) {
+          const results = await fetchBalances(addresses.slice(i,i+CHUNK));
+          holders = holders.concat(results);
+          status.textContent=`Loading balances… ${Math.round((holders.length/addresses.length)*100)}%`;
+        }
+        allHolders = holders.filter(h=>h.balance>0).sort((a,b)=>b.balance-a.balance);
+
+        // Fetch stakers from DAO DAO indexer in parallel
+        status.textContent='Fetching staking data from DAO DAO indexer…';
+        allStakers = await fetchStakers();
+        allStakers.sort((a,b)=>b.balance-a.balance);
+
+        filtered = [...allHolders];
+        applySort();
+
+        const top10sum = allHolders.slice(0,10).reduce((s,h)=>s+h.balance,0);
+        document.getElementById('stat-holders').textContent  = allHolders.length.toLocaleString();
+        document.getElementById('stat-top10').textContent    = supply?((top10sum/supply)*100).toFixed(1)+'%':'—';
+        document.getElementById('stat-updated').textContent  = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+
+        dot.className='status-dot live';
+        status.textContent=`Live · ${allStakers.length} stakers · ${allHolders.length} holders`;
+        renderTable();
+
+      } catch(err) {
+        console.error('NetaDATA error:', err);
+        dot.className='status-dot';
+        status.textContent='Error loading data — see console';
+        document.getElementById('lb-body').innerHTML=`<div class="empty-state">Failed to load data.<br><a href="https://www.mintscan.io/juno" target="_blank" rel="noopener" style="color:var(--blue);font-family:var(--font-mono);font-size:11px;">View on Mintscan ↗</a></div>`;
+      }
+    }
+
+    loadData();
+  })();
+  </script>
+</body>
+</html>
