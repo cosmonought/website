@@ -34,13 +34,15 @@
         <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:40px;height:40px;display:block;">
           <rect width="40" height="40" fill="#080808"/>
           <defs>
-            <clipPath id="n-top-NAV"><polygon points="0,0 40,0 40,17 0,23"/></clipPath>
-            <clipPath id="n-bot-NAV"><polygon points="0,25 40,19 40,40 0,40"/></clipPath>
-            <linearGradient id="n-grad-NAV" x1="0" y1="0" x2="40" y2="0"><stop offset="0%" stop-color="#C9338A"/><stop offset="100%" stop-color="#5B8EF0"/></linearGradient>
+            <linearGradient id="n-grad-NAV" x1="0" y1="0" x2="40" y2="0">
+              <stop offset="0%" stop-color="#C9338A"/>
+              <stop offset="100%" stop-color="#5B8EF0"/>
+            </linearGradient>
           </defs>
-          <polygon points="0,22 40,16 40,20 0,26" fill="url(#n-grad-NAV)" opacity="0.95"/>
-          <text clip-path="url(#n-top-NAV)" x="20" y="32" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-weight="900" font-size="32" fill="#f2f0eb">N</text>
-          <text clip-path="url(#n-bot-NAV)" x="21" y="33" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-weight="900" font-size="32" fill="#f2f0eb">N</text>
+          <!-- N letterform — solid white, intact -->
+          <text x="20" y="30" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-weight="900" font-size="32" fill="#f2f0eb">N</text>
+          <!-- Diagonal gradient bar across the N, semi-transparent -->
+          <polygon points="0,21 40,15 40,19 0,25" fill="url(#n-grad-NAV)" opacity="0.85"/>
         </svg>
       </a>
       <ul class="nav-links">
@@ -59,7 +61,7 @@
   <div class="hero-grid">
     <div class="hero-text-panel">
       <p class="hero-eyebrow">Interchain · Nonprofit · On-chain</p>
-      <h1>Public blockchains deserve<br><span class="grad-text">public institutions.</span></h1>
+      <h1 class="section-title" style="font-size:clamp(36px,4vw,60px);">Public blockchains deserve<br><span class="grad-text">public institutions.</span></h1>
       <p class="hero-sub">Neta DAO is a nonprofit organization serving the Cosmos ecosystem and the Interchain at large — through validator infrastructure, on-chain governance, and open educational programs.</p>
       <div class="hero-actions">
         <a href="about.html" class="btn btn-primary">Our Mission</a>
@@ -71,13 +73,16 @@
       <svg viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;max-height:100%;display:block;">
       <rect width="320" height="320" fill="#0f0f0f"/>
       <defs>
-        <clipPath id="ht-H"><polygon points="0,0 320,0 320,136 0,162"/></clipPath>
-        <clipPath id="hb-H"><polygon points="0,168 320,142 320,320 0,320"/></clipPath>
-        <linearGradient id="hg-H" x1="0" y1="0" x2="320" y2="0"><stop offset="0%" stop-color="#C9338A"/><stop offset="100%" stop-color="#5B8EF0"/></linearGradient>
+        <linearGradient id="hg-H" x1="0" y1="0" x2="320" y2="0">
+          <stop offset="0%" stop-color="#C9338A"/>
+          <stop offset="100%" stop-color="#5B8EF0"/>
+        </linearGradient>
       </defs>
-      <polygon points="0,161 320,135 320,143 0,169" fill="url(#hg-H)" opacity="0.95"/>
-      <text clip-path="url(#ht-H)" x="160" y="250" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-weight="900" font-size="280" fill="#f2f0eb" letter-spacing="-4">N</text>
-      <text clip-path="url(#hb-H)" x="168" y="258" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-weight="900" font-size="280" fill="#f2f0eb" letter-spacing="-4">N</text>
+      <!-- N letterform — solid, intact -->
+      <text x="160" y="244" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-weight="900" font-size="280" fill="#f2f0eb" letter-spacing="-4">N</text>
+      <!-- Diagonal gradient bar overlaid across the N -->
+      <polygon points="0,155 320,129 320,141 0,167" fill="url(#hg-H)" opacity="0.9"/>
+      <!-- Registration marks -->
       <line x1="0" y1="0" x2="20" y2="0" stroke="#333" stroke-width="1"/>
       <line x1="0" y1="0" x2="0" y2="20" stroke="#333" stroke-width="1"/>
       <line x1="320" y1="0" x2="300" y2="0" stroke="#333" stroke-width="1"/>
@@ -114,21 +119,21 @@
     </div>
   </div>
 
-  <!-- ── Origin — Juno salmon ── -->
-  <div class="panel reveal" style="background:#E06B54;">
+  <!-- ── Origin — Juno palette ── -->
+  <div class="panel reveal" style="background:#FFEBD2;">
     <div class="two-col">
       <div>
-        <p class="section-label" style="color:#80312a;">Origin</p>
+        <p class="section-label" style="color:#270B0D;opacity:0.6;">Origin</p>
         <h2 class="section-title" style="color:var(--ink);">Born from the first proposals of Juno</h2>
         <p class="section-body">The $NETA token was not created by this DAO. It was airdropped by the Juno Core-1 team to wallets that had participated in the very first governance proposals of the Juno Network — a recognition of civic engagement, not economic activity.</p>
         <div style="margin-top:32px;">
-          <a href="about.html" class="btn" style="border:3px solid #080808;background:transparent;color:#080808;">Read the full story</a>
+          <a href="about.html" class="btn" style="border:3px solid #270B0D;background:transparent;color:#270B0D;">Read the full story</a>
         </div>
       </div>
       <div>
-        <p class="section-body" style="margin-bottom:24px;color:#1a0a08;">Those early participants showed up to vote before it was profitable to do so. The airdrop was a statement that this kind of participation had value beyond price speculation.</p>
-        <p class="section-body" style="margin-bottom:24px;color:#1a0a08;">Neta DAO formed to honor and extend those values. We are stewards of a community defined by its commitment to governance. Our organization is governed by the Neta DAO Constitution, ratified on-chain, with weekly Congressional meetings open to all members.</p>
-        <p style="font-family:var(--font-mono);font-size:10px;color:#5a2820;line-height:1.6;word-break:break-all;">juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6</p>
+        <p class="section-body" style="margin-bottom:24px;color:#270B0D;">Those early participants showed up to vote before it was profitable to do so. The airdrop was a statement that this kind of participation had value beyond price speculation.</p>
+        <p class="section-body" style="margin-bottom:24px;color:#270B0D;">Neta DAO formed to honor and extend those values. We are stewards of a community defined by its commitment to governance. Our organization is governed by the Neta DAO Constitution, ratified on-chain, with weekly Congressional meetings open to all members.</p>
+        <p style="font-family:var(--font-mono);font-size:10px;color:#270B0D;opacity:0.5;line-height:1.6;word-break:break-all;">juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6</p>
       </div>
     </div>
   </div>
