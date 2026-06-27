@@ -283,7 +283,6 @@
   </footer>
 
   <script src="js/main.js"></script>
-  <script src="js/main.js"></script>
   <script>
   (() => {
     // ── Constants ──
@@ -292,8 +291,8 @@
     const NETA_CONTRACT    = 'juno168ctmpyppk90d34p3jjy658zf5a5l3w8wk35wht6ccqj4mr0yv8s4j5awr';
     const INDEXER          = 'https://indexer.daodao.zone/juno-1';
     const DAO_ADDRESS      = 'juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6';
-    // Staking contract discovered dynamically from DAO DAO indexer dumpState
-    let STAKING_CONTRACT = null; // populated at runtime
+    // Staking contract address (discovered from indexer, now hardcoded for reliability)
+    let STAKING_CONTRACT = 'juno1a7x8aj7k38vnj9edrlymkerhrl5d4ud3makmqhx6vt3dhu0d824qh038zh';
     const MINTSCAN         = 'https://www.mintscan.io/juno';
     const PAGE_SIZE        = 50;
 
@@ -318,10 +317,12 @@
       console.log('Fetching stakers from contract:', STAKING_CONTRACT);
       // Try several indexer endpoint variants
       const endpoints = [
+        `${INDEXER}/contract/${STAKING_CONTRACT}/cwStake/topStakers?limit=500`,
+        `${INDEXER}/contract/${STAKING_CONTRACT}/cwStake/allStakers`,
+        `${INDEXER}/contract/${STAKING_CONTRACT}/cwStake/stakedBalances`,
+        `${INDEXER}/contract/${STAKING_CONTRACT}/cw20Stake/topStakers?limit=500`,
+        `${INDEXER}/contract/${STAKING_CONTRACT}/cw20Stake/allStakers`,
         `${INDEXER}/contract/${STAKING_CONTRACT}/daoStakeCw20/topStakers?limit=500`,
-        `${INDEXER}/contract/${STAKING_CONTRACT}/daoStakeCw20/allStakers`,
-        `${INDEXER}/contract/${STAKING_CONTRACT}/daoVotingCw20Staked/topStakers?limit=500`,
-        `${INDEXER}/contract/${STAKING_CONTRACT}/daoStakeCw20/stakedBalances`,
       ];
       for (const url of endpoints) {
         try {
@@ -371,7 +372,7 @@
     // ── Fetch staking history for one address ──
     async function fetchStakingHistory(address) {
       try {
-        const r = await fetch(`${INDEXER}/contract/${STAKING_CONTRACT}/daoStakeCw20/stakedBalance?address=${address}`);
+        const r = await fetch(`${INDEXER}/contract/${STAKING_CONTRACT}/cwStake/stakedBalance?address=${address}`);
         if (r.ok) { const d = await r.json(); return Array.isArray(d) ? d : []; }
       } catch {}
       return [];
