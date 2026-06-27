@@ -166,13 +166,13 @@
         <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:40px;height:40px;display:block;">
           <rect width="40" height="40" fill="#080808"/>
           <defs>
-            <linearGradient id="n-grad-NAV" x1="0" y1="0" x2="40" y2="0">
+            <linearGradient id="ng" x1="0" y1="0" x2="1" y2="0">
               <stop offset="0%" stop-color="#C9338A"/>
               <stop offset="100%" stop-color="#5B8EF0"/>
             </linearGradient>
           </defs>
-          <text x="20" y="30" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-weight="900" font-size="32" fill="#f2f0eb">N</text>
-          <polygon points="0,19 40,13 40,19 0,25" fill="url(#n-grad-NAV)"/>
+          <text x="20" y="31" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-weight="900" font-size="34" fill="#f2f0eb">N</text>
+          <polygon points="0,17 40,11 40,20 0,26" fill="url(#ng)"/>
         </svg>
       </a>
       <ul class="nav-links">
@@ -312,20 +312,24 @@
     // ── Fetch stakers from DAO DAO indexer (CORS-open) ──
     async function fetchStakers() {
       if (!STAKING_CONTRACT) {
-        console.warn('No staking contract address available');
+        console.warn('No staking contract — skipping fetchStakers');
         return [];
       }
+      console.log('Fetching stakers from contract:', STAKING_CONTRACT);
       // Try several indexer endpoint variants
       const endpoints = [
         `${INDEXER}/contract/${STAKING_CONTRACT}/daoStakeCw20/topStakers?limit=500`,
         `${INDEXER}/contract/${STAKING_CONTRACT}/daoStakeCw20/allStakers`,
+        `${INDEXER}/contract/${STAKING_CONTRACT}/daoVotingCw20Staked/topStakers?limit=500`,
         `${INDEXER}/contract/${STAKING_CONTRACT}/daoStakeCw20/stakedBalances`,
       ];
       for (const url of endpoints) {
         try {
           const r = await fetch(url);
+          console.log('Staker endpoint', url, '→', r.status);
           if (!r.ok) continue;
           const d = await r.json();
+          console.log('Staker response sample:', JSON.stringify(d).slice(0, 200));
           if (Array.isArray(d) && d.length > 0) {
             return d.map(s => ({
               address: s.address,
@@ -554,61 +558,86 @@
         // Set supply immediately — it's fixed
         document.getElementById('stat-supply').textContent = '30,222 NETA';
 
-        status.textContent='Discovering staking contract from DAO DAO indexer…';
-        // Dynamically discover staking contract via multiple strategies
-        try {
-          // Strategy 1: dumpState → voting_module → stakingContract
-          const dumpRes = await fetch(`${INDEXER}/contract/${DAO_ADDRESS}/daoCore/dumpState`);
-          if (dumpRes.ok) {
-            const dump = await dumpRes.json();
-            console.log('dumpState keys:', Object.keys(dump || {}));
-            // voting_module may be a string address or an object
-            const vm = typeof dump?.voting_module === 'string'
-              ? dump.voting_module
-              : (dump?.voting_module?.address || dump?.voting_module_address || null);
-            console.log('voting module:', vm);
-            if (vm) {
-              status.textContent='Found voting module, fetching staking contract…';
-              const vmRes = await fetch(`${INDEXER}/contract/${vm}/daoVotingCw20Staked/stakingContract`);
-              if (vmRes.ok) {
-                const vmRaw = await vmRes.text();
-                console.log('stakingContract raw response:', vmRaw.slice(0, 200));
-                try {
-                  const vmData = JSON.parse(vmRaw);
-                  // Response may be a plain string or an object
-                  if (typeof vmData === 'string') {
-                    STAKING_CONTRACT = vmData;
-                  } else {
-                    STAKING_CONTRACT = vmData?.stakingContractAddress
-                      || vmData?.staking_contract_address
-                      || vmData?.address
-                      || (typeof vmData === 'string' ? vmData : null);
+        status.textContent='Fetching staker data from DAO DAO indexer…';
+
+        // ── Discover staking contract via DAO DAO indexer ──
+        // Try every known endpoint pattern — the DAO was created with an older
+        // version of DAO DAO so the indexer paths may differ from current docs.
+        const tryUrls = [
+          // Current indexer paths for cw20-staked voting module
+          `${INDEXER}/contract/${DAO_ADDRESS}/daoCore/dumpState`,
+          `${INDEXER}/contract/${DAO_ADDRESS}/daoCore/votingModule`,
+        ];
+
+        for (const url of tryUrls) {
+          try {
+            const r = await fetch(url);
+            if (!r.ok) { console.log('Failed:', url, r.status); continue; }
+            const raw = await r.text();
+            console.log('Response from', url, ':', raw.slice(0, 300));
+            const d = JSON.parse(raw);
+
+            // Extract voting_module address
+            let vm = null;
+            if (typeof d === 'string') vm = d;
+            else if (typeof d?.voting_module === 'string') vm = d.voting_module;
+            else if (d?.voting_module?.address) vm = d.voting_module.address;
+            else if (typeof d?.address === 'string') vm = d.address;
+            else if (typeof d?.contract_address === 'string') vm = d.contract_address;
+
+            if (!vm) { console.log('No vm address in', url, '- keys:', Object.keys(d || {})); continue; }
+            console.log('Voting module:', vm);
+
+            // Try to get staking contract from voting module
+            const scUrls = [
+              `${INDEXER}/contract/${vm}/daoVotingCw20Staked/stakingContract`,
+              `${INDEXER}/contract/${vm}/daoVotingCw20Staked/staking_contract`,
+              `${INDEXER}/contract/${vm}/daoVotingCw20Staked/config`,
+            ];
+            for (const scUrl of scUrls) {
+              try {
+                const r2 = await fetch(scUrl);
+                if (!r2.ok) { console.log('SC failed:', scUrl, r2.status); continue; }
+                const raw2 = await r2.text();
+                console.log('SC response from', scUrl, ':', raw2.slice(0, 200));
+                const d2 = JSON.parse(raw2);
+                if (typeof d2 === 'string' && d2.startsWith('juno1')) { STAKING_CONTRACT = d2; break; }
+                const sc = d2?.stakingContractAddress || d2?.staking_contract_address
+                  || d2?.staking_contract || d2?.address || d2?.contract_address;
+                if (sc && sc.startsWith('juno1')) { STAKING_CONTRACT = sc; break; }
+                // Sometimes it returns {address: "juno1..."} or just "juno1..."
+                const keys = Object.keys(d2 || {});
+                for (const k of keys) {
+                  if (typeof d2[k] === 'string' && d2[k].startsWith('juno1')) {
+                    console.log('Found juno address in key', k, ':', d2[k]);
+                    STAKING_CONTRACT = d2[k]; break;
                   }
-                } catch { STAKING_CONTRACT = vmRaw.trim().replace(/^"|"$/g, ''); }
-                if (STAKING_CONTRACT) console.log('Staking contract discovered:', STAKING_CONTRACT);
-              }
+                }
+                if (STAKING_CONTRACT) break;
+              } catch(e) { console.log('SC endpoint error:', scUrl, e.message); }
             }
-          }
-        } catch(e) {
-          console.warn('Strategy 1 failed:', e.message);
+            if (STAKING_CONTRACT) break;
+          } catch(e) { console.log('Discovery error:', url, e.message); }
         }
 
-        // Strategy 2: Try known indexer path for cw20-staked voting module directly
+        // If still no staking contract, try fetching stakers directly via
+        // the DAO DAO GraphQL / REST alternatives
         if (!STAKING_CONTRACT) {
+          console.warn('Could not discover staking contract via dumpState. Trying direct staker query on DAO...');
           try {
-            const altRes = await fetch(`${INDEXER}/contract/${DAO_ADDRESS}/daoCore/votingModule`);
-            if (altRes.ok) {
-              const altData = await altRes.json();
-              const vm2 = typeof altData === 'string' ? altData : (altData?.address || altData?.contract_address);
-              if (vm2) {
-                const sc2 = await fetch(`${INDEXER}/contract/${vm2}/daoVotingCw20Staked/stakingContract`);
-                if (sc2.ok) {
-                  const raw2 = await sc2.text();
-                  try { const d2=JSON.parse(raw2); STAKING_CONTRACT=typeof d2==='string'?d2:(d2?.address||null); } catch{}
-                }
+            // Some DAO DAO versions expose stakers directly on the DAO address
+            const r = await fetch(`${INDEXER}/contract/${DAO_ADDRESS}/daoVotingCw20Staked/topStakers?limit=200`);
+            if (r.ok) {
+              const d = await r.json();
+              if (Array.isArray(d) && d.length > 0) {
+                console.log('Found stakers directly on DAO address:', d.length);
+                allStakers = d.map(s => ({
+                  address: s.address,
+                  balance: parseFloat(s.balance || s.stakedBalance || s.staked || '0') / 1e6
+                })).filter(s => s.balance > 0);
               }
             }
-          } catch(e) { console.warn('Strategy 2 failed:', e.message); }
+          } catch(e) { console.log('Direct staker query failed:', e.message); }
         }
 
         console.log('Final STAKING_CONTRACT:', STAKING_CONTRACT);
