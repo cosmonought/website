@@ -189,7 +189,7 @@
       </div>
       <div style="padding:56px 48px;display:flex;align-items:center;">
         <div class="summary-bar" style="width:100%;margin-bottom:0;">
-          <div class="summary-stat"><div class="summary-stat-label">Total Holders</div><div class="summary-stat-val" id="stat-holders">—</div></div>
+          <div class="summary-stat"><div class="summary-stat-label">Active Stakers</div><div class="summary-stat-val" id="stat-holders">—</div></div>
           <div class="summary-stat"><div class="summary-stat-label">Total Supply</div><div class="summary-stat-val" id="stat-supply">—</div></div>
           <div class="summary-stat"><div class="summary-stat-label">Top 10 Share</div><div class="summary-stat-val" id="stat-top10">—</div></div>
           <div class="summary-stat"><div class="summary-stat-label">Updated</div><div class="summary-stat-val" id="stat-updated" style="font-size:14px;">—</div></div>
@@ -212,8 +212,8 @@
       </div>
 
       <div class="tab-row">
-        <button class="tab-btn active" data-tab="holders">All Holders</button>
-        <button class="tab-btn" data-tab="stakers">Stakers (DAO voters)</button>
+        <button class="tab-btn active" data-tab="stakers">Stakers (DAO Voters)</button>
+        <button class="tab-btn" data-tab="holders" style="opacity:0.5;cursor:not-allowed;" title="All holder data requires a Juno node — coming soon">All Holders ⚠</button>
       </div>
 
       <div class="table-controls">
@@ -278,145 +278,90 @@
   </footer>
 
   <script src="js/main.js"></script>
-  <!-- CosmJS via CDN for CORS-safe RPC queries -->
-  <script src="https://cdn.jsdelivr.net/npm/@cosmjs/cosmwasm-stargate@0.32.4/build/cosmwasmstargate.bundle.js"></script>
+  <script src="js/main.js"></script>
   <script>
   (() => {
-    const NETA_CONTRACT = 'juno168ctmpyppk90d34p3jjy658zf5a5l3w8wk35wht6ccqj4mr0yv8s4j5awr';
-    const INDEXER       = 'https://indexer.daodao.zone/juno-1';
-    const DAO_ADDRESS   = 'juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6';
-    const MINTSCAN      = 'https://www.mintscan.io/juno';
-    // RPC endpoints that allow browser connections
-    const RPC_ENDPOINTS = [
-      'https://rpc.cosmos.directory/juno',
-      'https://juno-rpc.polkachu.com',
-      'https://rpc-juno.itastakers.com',
-    ];
-    const PAGE_SIZE = 50;
+    // ── Constants ──
+    // NETA is fixed supply — 30,222 NETA minted at genesis, never changes
+    const NETA_TOTAL_SUPPLY = 30222;
+    const NETA_CONTRACT    = 'juno168ctmpyppk90d34p3jjy658zf5a5l3w8wk35wht6ccqj4mr0yv8s4j5awr';
+    const INDEXER          = 'https://indexer.daodao.zone/juno-1';
+    const DAO_ADDRESS      = 'juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6';
+    // Known staking contract address (from DAO constitution / dumpState)
+    const STAKING_CONTRACT = 'juno1an3pf3e0q2vvjzcd2ffvzlf6s7e6c5uf0wy5cu25hgmz8r3jdhcq88gcq';
+    const MINTSCAN         = 'https://www.mintscan.io/juno';
+    const PAGE_SIZE        = 50;
 
-    let allHolders  = [];
     let allStakers  = [];
     let filtered    = [];
-    let currentTab  = 'holders';
     let currentPage = 1;
     let sortCol     = 'balance';
     let sortDir     = 'desc';
-    let totalSupply = 0;
-    let stakingAddr = null;
     let balChart    = null;
-    let cosmClient  = null;
 
-    const fmt  = n => Number(n).toLocaleString('en-US', {maximumFractionDigits:4});
-    const fmtM = n => { const v=Number(n); if(v>=1e6) return (v/1e6).toFixed(2)+'M'; if(v>=1e3) return (v/1e3).toFixed(1)+'K'; return v.toFixed(2); };
+    const fmt   = n => Number(n).toLocaleString('en-US', {maximumFractionDigits:4});
+    const fmtM  = n => { const v=Number(n); if(v>=1e6) return (v/1e6).toFixed(2)+'M'; if(v>=1e3) return (v/1e3).toFixed(1)+'K'; return v.toFixed(2); };
     const short = a => a ? a.slice(0,10)+'…'+a.slice(-6) : '';
     const esc   = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-    // ── Connect CosmJS via RPC (bypasses LCD CORS issues) ──
-    async function getClient() {
-      if (cosmClient) return cosmClient;
-      for (const rpc of RPC_ENDPOINTS) {
+    // ── Fetch stakers from DAO DAO indexer (CORS-open) ──
+    async function fetchStakers() {
+      // Try several indexer endpoint variants
+      const endpoints = [
+        `${INDEXER}/contract/${STAKING_CONTRACT}/daoStakeCw20/topStakers?limit=500`,
+        `${INDEXER}/contract/${STAKING_CONTRACT}/daoStakeCw20/allStakers`,
+        `${INDEXER}/contract/${STAKING_CONTRACT}/daoStakeCw20/stakedBalances`,
+      ];
+      for (const url of endpoints) {
         try {
-          cosmClient = await window.CosmWasmStargate.CosmWasmClient.connect(rpc);
-          console.log('Connected to', rpc);
-          return cosmClient;
-        } catch(e) { console.warn('RPC failed:', rpc, e.message); }
+          const r = await fetch(url);
+          if (!r.ok) continue;
+          const d = await r.json();
+          if (Array.isArray(d) && d.length > 0) {
+            return d.map(s => ({
+              address: s.address,
+              balance: parseFloat(s.balance || s.stakedBalance || s.staked || '0') / 1e6
+            })).filter(s => s.balance > 0);
+          }
+        } catch(e) { console.warn('Endpoint failed:', url, e.message); }
       }
-      throw new Error('All RPC endpoints failed');
-    }
-
-    // ── Query CW20 contract via CosmJS ──
-    async function queryContract(query) {
-      const client = await getClient();
-      return client.queryContractSmart(NETA_CONTRACT, query);
-    }
-
-    // ── Fetch all CW20 holders ──
-    async function fetchAllHolders(onProgress) {
-      let holders = [], startAfter = null;
-      while (true) {
-        const q = { all_accounts: { limit: 30, ...(startAfter ? { start_after: startAfter } : {}) } };
-        const data = await queryContract(q);
-        const accounts = data?.accounts || [];
-        if (!accounts.length) break;
-        holders = holders.concat(accounts);
-        startAfter = accounts[accounts.length-1];
-        onProgress(holders.length);
-        if (accounts.length < 30) break;
-        await new Promise(r => setTimeout(r, 50));
-      }
-      return holders;
-    }
-
-    // ── Fetch balance for one address ──
-    async function fetchBalance(address) {
-      try {
-        const data = await queryContract({ balance: { address } });
-        return parseFloat(data?.balance || '0') / 1e6;
-      } catch { return 0; }
-    }
-
-    // ── Fetch balances in chunks ──
-    async function fetchBalances(addresses, onProgress) {
-      const results = [];
-      const CHUNK = 10;
-      for (let i = 0; i < addresses.length; i += CHUNK) {
-        const chunk = addresses.slice(i, i+CHUNK);
-        const bals  = await Promise.all(chunk.map(a => fetchBalance(a)));
-        chunk.forEach((addr, j) => results.push({ address: addr, balance: bals[j] }));
-        onProgress(results.length, addresses.length);
-        await new Promise(r => setTimeout(r, 30));
-      }
-      return results;
-    }
-
-    // ── Token supply ──
-    async function fetchSupply() {
-      try {
-        const data = await queryContract({ token_info: {} });
-        return parseFloat(data?.total_supply || '0') / 1e6;
-      } catch { return 0; }
-    }
-
-    // ── DAO DAO indexer: staking contract ──
-    async function fetchStakingAddr() {
+      // Fallback: try fetching staking contract address dynamically
       try {
         const r = await fetch(`${INDEXER}/contract/${DAO_ADDRESS}/daoCore/dumpState`);
-        if (!r.ok) return null;
-        const d = await r.json();
-        const vm = d?.voting_module;
-        if (!vm) return null;
-        const r2 = await fetch(`${INDEXER}/contract/${vm}/daoVotingCw20Staked/stakingContract`);
-        if (!r2.ok) return null;
-        const d2 = await r2.json();
-        return d2?.stakingContractAddress || d2?.staking_contract_address || null;
-      } catch { return null; }
-    }
-
-    // ── DAO DAO indexer: all stakers ──
-    async function fetchStakers() {
-      if (!stakingAddr) return [];
-      try {
-        const r = await fetch(`${INDEXER}/contract/${stakingAddr}/daoStakeCw20/topStakers?limit=200`);
         if (r.ok) {
           const d = await r.json();
-          if (Array.isArray(d)) return d.map(s => ({ address: s.address, balance: parseFloat(s.balance||s.staked||'0')/1e6 })).filter(s=>s.balance>0);
+          const vm = d?.voting_module;
+          if (vm) {
+            const r2 = await fetch(`${INDEXER}/contract/${vm}/daoVotingCw20Staked/stakingContract`);
+            if (r2.ok) {
+              const d2 = await r2.json();
+              const addr = d2?.stakingContractAddress || d2?.staking_contract_address;
+              if (addr && addr !== STAKING_CONTRACT) {
+                const r3 = await fetch(`${INDEXER}/contract/${addr}/daoStakeCw20/topStakers?limit=500`);
+                if (r3.ok) {
+                  const d3 = await r3.json();
+                  if (Array.isArray(d3) && d3.length > 0) {
+                    return d3.map(s => ({
+                      address: s.address,
+                      balance: parseFloat(s.balance || s.stakedBalance || s.staked || '0') / 1e6
+                    })).filter(s => s.balance > 0);
+                  }
+                }
+              }
+            }
+          }
         }
-        const r2 = await fetch(`${INDEXER}/contract/${stakingAddr}/daoStakeCw20/allStakers`);
-        if (r2.ok) {
-          const d2 = await r2.json();
-          if (Array.isArray(d2)) return d2.map(s => ({ address: s.address, balance: parseFloat(s.balance||s.staked||'0')/1e6 })).filter(s=>s.balance>0);
-        }
-      } catch(e) { console.warn('Stakers fetch failed:', e); }
+      } catch(e) { console.warn('Fallback staking fetch failed:', e.message); }
       return [];
     }
 
-    // ── Staking history from indexer ──
+    // ── Fetch staking history for one address ──
     async function fetchStakingHistory(address) {
-      if (!stakingAddr) return [];
       try {
-        const r = await fetch(`${INDEXER}/contract/${stakingAddr}/daoStakeCw20/stakedBalance?address=${address}`);
-        return r.ok ? (await r.json() || []) : [];
-      } catch { return []; }
+        const r = await fetch(`${INDEXER}/contract/${STAKING_CONTRACT}/daoStakeCw20/stakedBalance?address=${address}`);
+        if (r.ok) { const d = await r.json(); return Array.isArray(d) ? d : []; }
+      } catch {}
+      return [];
     }
 
     // ── Render table ──
@@ -434,7 +379,7 @@
 
       document.getElementById('lb-body').innerHTML = page.map((h,i) => {
         const rank   = start+i+1;
-        const pct    = totalSupply ? ((h.balance/totalSupply)*100).toFixed(4) : '—';
+        const pct    = ((h.balance / NETA_TOTAL_SUPPLY) * 100).toFixed(4);
         const barPct = Math.min((h.balance/maxBal)*100,100).toFixed(1);
         return `<div class="lb-row" data-addr="${esc(h.address)}" data-rank="${rank}">
           <div class="lb-cell"><span class="lb-rank${rank<=3?' top3':''}">${rank}</span></div>
@@ -469,7 +414,7 @@
       const prev=document.getElementById('pg-prev'), next=document.getElementById('pg-next');
       if(prev) prev.addEventListener('click',()=>{currentPage--;renderTable();});
       if(next) next.addEventListener('click',()=>{currentPage++;renderTable();});
-      document.getElementById('page-info').textContent=`Showing ${start+1}–${Math.min(start+PAGE_SIZE,filtered.length)} of ${filtered.length.toLocaleString()}`;
+      document.getElementById('page-info').textContent=`Showing ${start+1}–${Math.min(start+PAGE_SIZE,filtered.length)} of ${filtered.length.toLocaleString()} stakers`;
     }
 
     function applySort() {
@@ -492,38 +437,25 @@
     });
 
     document.getElementById('search-input').addEventListener('input', e => {
-      const q   = e.target.value.trim().toLowerCase();
-      const src = currentTab==='stakers' ? allStakers : allHolders;
-      filtered  = q ? src.filter(h=>h.address.toLowerCase().includes(q)) : [...src];
+      const q  = e.target.value.trim().toLowerCase();
+      filtered = q ? allStakers.filter(h=>h.address.toLowerCase().includes(q)) : [...allStakers];
       applySort(); currentPage=1; renderTable();
-    });
-
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        currentTab = btn.dataset.tab;
-        document.getElementById('search-input').value = '';
-        filtered = [...(currentTab==='stakers' ? allStakers : allHolders)];
-        applySort(); currentPage=1; renderTable();
-      });
     });
 
     // ── Drawer ──
     async function openDrawer(address, rank) {
-      const src    = currentTab==='stakers' ? allStakers : allHolders;
-      const holder = src.find(h=>h.address===address);
+      const holder = allStakers.find(h=>h.address===address);
       if (!holder) return;
 
-      document.getElementById('drawer-rank').textContent = `Rank #${rank} · ${currentTab==='stakers'?'Staker':'Holder'}`;
+      document.getElementById('drawer-rank').textContent = `Rank #${rank} · Staker`;
       document.getElementById('drawer-addr').textContent = address;
       document.getElementById('wallet-drawer').classList.add('open');
       document.getElementById('drawer-overlay').classList.add('open');
       document.body.style.overflow = 'hidden';
 
-      const pct = totalSupply ? ((holder.balance/totalSupply)*100).toFixed(4) : '—';
+      const pct = ((holder.balance / NETA_TOTAL_SUPPLY) * 100).toFixed(4);
       document.getElementById('drawer-stats').innerHTML = `
-        <div class="drawer-stat"><div class="drawer-stat-label">${currentTab==='stakers'?'Staked':'Balance'}</div><div class="drawer-stat-val grad">${fmtM(holder.balance)}</div></div>
+        <div class="drawer-stat"><div class="drawer-stat-label">Staked NETA</div><div class="drawer-stat-val grad">${fmtM(holder.balance)}</div></div>
         <div class="drawer-stat"><div class="drawer-stat-label">% of Supply</div><div class="drawer-stat-val">${pct}%</div></div>
         <div class="drawer-stat"><div class="drawer-stat-label">Rank</div><div class="drawer-stat-val">#${rank}</div></div>
         <div class="drawer-stat"><div class="drawer-stat-label">NETA Exact</div><div class="drawer-stat-val" style="font-size:14px;">${fmt(holder.balance)}</div></div>`;
@@ -533,27 +465,19 @@
         <a href="https://daodao.zone/dao/${DAO_ADDRESS}" target="_blank" rel="noopener">DAO DAO ↗</a>`;
 
       document.getElementById('tx-list').innerHTML = '<div class="empty-state" style="padding:20px 0;">Loading…</div>';
-      document.getElementById('chart-title').textContent = currentTab==='stakers' ? 'Staking History (DAO DAO Indexer)' : 'Balance History';
+      document.getElementById('chart-title').textContent = 'Staking History (DAO DAO Indexer)';
 
-      if (currentTab==='stakers' && stakingAddr) {
-        const history = await fetchStakingHistory(address);
-        renderHistoryChart(history, holder.balance);
-      } else {
-        renderEstimatedChart(holder.balance);
-      }
+      const history = await fetchStakingHistory(address);
+      renderHistoryChart(history, holder.balance);
 
-      // Recent txs via CosmJS
-      renderTxList([], address);
-      try {
-        const client = await getClient();
-        const txs = await client.searchTx([
-          { attributeKey: 'wasm._contract_address', attributeValue: NETA_CONTRACT },
-          { attributeKey: 'message.sender', attributeValue: address }
-        ]);
-        renderTxList(txs.slice(0,15).reverse(), address);
-      } catch(e) {
-        renderTxList([], address);
-      }
+      document.getElementById('tx-list').innerHTML = `
+        <div style="padding:12px 0;font-size:13px;color:var(--text-muted);">
+          Transaction history requires a Juno node connection.<br>
+          <a href="${MINTSCAN}/address/${address}" target="_blank" rel="noopener"
+             style="color:var(--blue);font-family:var(--font-mono);font-size:11px;">
+            View full history on Mintscan ↗
+          </a>
+        </div>`;
     }
 
     function renderHistoryChart(history, currentBal) {
@@ -561,17 +485,17 @@
       if (balChart) { balChart.destroy(); balChart=null; }
       let labels, data;
       if (history && history.length > 1) {
-        labels = history.map(p => new Date(p.at||p.blockHeight||0).toLocaleDateString('en-US',{month:'short',day:'numeric'}));
-        data   = history.map(p => parseFloat(p.balance||p.staked||'0')/1e6);
+        labels = history.map(p => {
+          const d = p.at ? new Date(p.at) : new Date(parseInt(p.blockHeight||0)*6000 + 1654041600000);
+          return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'});
+        });
+        data = history.map(p => parseFloat(p.balance||p.stakedBalance||p.staked||'0')/1e6);
+        const chartColor = '#5B8EF0';
+        const gradColor  = 'rgba(91,142,240,';
+        balChart = buildChart(canvas, labels, data, chartColor, gradColor);
       } else {
-        renderEstimatedChart(currentBal); return;
+        renderEstimatedChart(currentBal);
       }
-      balChart = new Chart(canvas, {
-        type:'line', data:{labels,datasets:[{data,borderColor:'#5B8EF0',borderWidth:1.5,pointRadius:2,pointBackgroundColor:'#5B8EF0',tension:0.3,fill:true,
-          backgroundColor:(ctx)=>{ const g=ctx.chart.ctx.createLinearGradient(0,0,0,160); g.addColorStop(0,'rgba(91,142,240,0.18)'); g.addColorStop(1,'rgba(91,142,240,0)'); return g; }}]},
-        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.parsed.y)} NETA`},backgroundColor:'#1a1a1a',borderColor:'#242424',borderWidth:1,titleColor:'#888',bodyColor:'#f0f0f0',titleFont:{family:'IBM Plex Mono',size:10},bodyFont:{family:'IBM Plex Mono',size:11}}},
-          scales:{x:{ticks:{color:'#555',font:{family:'IBM Plex Mono',size:9},maxTicksLimit:6},grid:{color:'#1a1a1a'}},y:{ticks:{color:'#555',font:{family:'IBM Plex Mono',size:9},callback:v=>fmtM(v)},grid:{color:'#1a1a1a'}}}}
-      });
     }
 
     function renderEstimatedChart(bal) {
@@ -586,42 +510,23 @@
         data.push(parseFloat(cur.toFixed(4)));
       }
       data[pts-1]=bal;
-      balChart = new Chart(canvas, {
-        type:'line', data:{labels,datasets:[{data,borderColor:'#C9338A',borderWidth:1.5,pointRadius:0,tension:0.4,fill:true,
-          backgroundColor:(ctx)=>{ const g=ctx.chart.ctx.createLinearGradient(0,0,0,160); g.addColorStop(0,'rgba(201,51,138,0.18)'); g.addColorStop(1,'rgba(201,51,138,0)'); return g; }}]},
-        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.parsed.y)} NETA`},backgroundColor:'#1a1a1a',borderColor:'#242424',borderWidth:1,titleColor:'#888',bodyColor:'#f0f0f0',titleFont:{family:'IBM Plex Mono',size:10},bodyFont:{family:'IBM Plex Mono',size:11}}},
-          scales:{x:{ticks:{color:'#555',font:{family:'IBM Plex Mono',size:9},maxTicksLimit:6},grid:{color:'#1a1a1a'}},y:{ticks:{color:'#555',font:{family:'IBM Plex Mono',size:9},callback:v=>fmtM(v)},grid:{color:'#1a1a1a'}}}}
-      });
+      balChart = buildChart(canvas, labels, data, '#C9338A', 'rgba(201,51,138,');
     }
 
-    function renderTxList(txs, address) {
-      const el = document.getElementById('tx-list');
-      if (!txs.length) {
-        el.innerHTML=`<div style="padding:12px 0;font-size:13px;color:var(--text-muted);">
-          No recent $NETA transactions found.<br>
-          <a href="${MINTSCAN}/address/${address}" target="_blank" rel="noopener" style="color:var(--blue);font-family:var(--font-mono);font-size:11px;">View on Mintscan ↗</a></div>`;
-        return;
-      }
-      el.innerHTML = txs.map(tx => {
-        const hash = tx.hash || '';
-        const time = tx.height ? `Block ${tx.height}` : '';
-        const msgs = tx.tx?.body?.messages || [];
-        const msgType = msgs[0]?.typeUrl || '';
-        let type = 'other';
-        if (msgType.includes('MsgExecuteContract')) {
-          try {
-            const msg = JSON.parse(atob(msgs[0].value?.msg || ''));
-            if (msg.transfer || msg.send) type='send';
-            else if (msg.stake || msg.bond) type='stake';
-            else if (msg.unstake || msg.unbond) type='unstake';
-          } catch { type='other'; }
-        }
-        return `<div class="tx-item">
-          <span class="tx-type ${type}">${type}</span>
-          <div><div class="tx-hash">${hash?hash.slice(0,16)+'…':''}</div><div class="tx-time">${time}</div></div>
-          <a href="${MINTSCAN}/tx/${hash}" target="_blank" rel="noopener" style="font-family:var(--font-mono);font-size:10px;color:var(--blue);">↗</a>
-        </div>`;
-      }).join('') + `<div style="padding:10px 0;"><a href="${MINTSCAN}/address/${address}" target="_blank" rel="noopener" style="font-family:var(--font-mono);font-size:11px;color:var(--blue);">Full history on Mintscan ↗</a></div>`;
+    function buildChart(canvas, labels, data, color, gradRgba) {
+      return new Chart(canvas, {
+        type:'line',
+        data:{labels,datasets:[{data,borderColor:color,borderWidth:1.5,pointRadius:0,tension:0.4,fill:true,
+          backgroundColor:(ctx)=>{ const g=ctx.chart.ctx.createLinearGradient(0,0,0,160); g.addColorStop(0,gradRgba+'0.18)'); g.addColorStop(1,gradRgba+'0)'); return g; }}]},
+        options:{responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.parsed.y)} NETA`},
+            backgroundColor:'#1a1a1a',borderColor:'#242424',borderWidth:1,titleColor:'#888',bodyColor:'#f0f0f0',
+            titleFont:{family:'IBM Plex Mono',size:10},bodyFont:{family:'IBM Plex Mono',size:11}}},
+          scales:{
+            x:{ticks:{color:'#555',font:{family:'IBM Plex Mono',size:9},maxTicksLimit:6},grid:{color:'#1a1a1a'}},
+            y:{ticks:{color:'#555',font:{family:'IBM Plex Mono',size:9},callback:v=>fmtM(v)},grid:{color:'#1a1a1a'}}
+          }}
+      });
     }
 
     function closeDrawer() {
@@ -637,38 +542,29 @@
     async function loadData() {
       const dot=document.getElementById('status-dot'), status=document.getElementById('status-text');
       try {
-        status.textContent='Connecting to Juno…';
-        const [supply, sAddr] = await Promise.all([fetchSupply(), fetchStakingAddr()]);
-        totalSupply = supply;
-        stakingAddr = sAddr;
-        document.getElementById('stat-supply').textContent = fmtM(supply)+' NETA';
+        // Set supply immediately — it's fixed
+        document.getElementById('stat-supply').textContent = '30,222 NETA';
 
-        status.textContent='Fetching all holder addresses…';
-        const addresses = await fetchAllHolders(n => {
-          status.textContent=`Found ${n} holders so far…`;
-        });
-
-        status.textContent=`Fetching balances for ${addresses.length.toLocaleString()} wallets…`;
-        const holders = await fetchBalances(addresses, (done, total) => {
-          status.textContent=`Loading balances… ${Math.round((done/total)*100)}%`;
-        });
-
-        allHolders = holders.filter(h=>h.balance>0).sort((a,b)=>b.balance-a.balance);
-
-        status.textContent='Fetching staking data from DAO DAO…';
+        status.textContent='Fetching stakers from DAO DAO indexer…';
         allStakers = await fetchStakers();
-        allStakers.sort((a,b)=>b.balance-a.balance);
 
-        filtered = [...allHolders];
+        if (!allStakers.length) {
+          throw new Error('No stakers returned from indexer. The staking contract address may have changed.');
+        }
+
+        allStakers.sort((a,b)=>b.balance-a.balance);
+        filtered = [...allStakers];
         applySort();
 
-        const top10 = allHolders.slice(0,10).reduce((s,h)=>s+h.balance,0);
-        document.getElementById('stat-holders').textContent  = allHolders.length.toLocaleString();
-        document.getElementById('stat-top10').textContent    = supply?((top10/supply)*100).toFixed(1)+'%':'—';
+        const totalStaked = allStakers.reduce((s,h)=>s+h.balance,0);
+        const top10sum    = allStakers.slice(0,10).reduce((s,h)=>s+h.balance,0);
+
+        document.getElementById('stat-holders').textContent  = allStakers.length.toLocaleString()+' stakers';
+        document.getElementById('stat-top10').textContent    = ((top10sum/NETA_TOTAL_SUPPLY)*100).toFixed(1)+'%';
         document.getElementById('stat-updated').textContent  = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
 
         dot.className='status-dot live';
-        status.textContent=`Live · ${allHolders.length} holders · ${allStakers.length} stakers`;
+        status.textContent=`Live · ${allStakers.length} stakers · ${fmtM(totalStaked)} NETA staked`;
         renderTable();
 
       } catch(err) {
@@ -676,9 +572,10 @@
         dot.className='status-dot';
         status.textContent='Error: '+err.message;
         document.getElementById('lb-body').innerHTML=`<div class="empty-state">
-          Could not load data.<br>
-          <span style="font-family:var(--font-mono);font-size:11px;color:#555;">${err.message}</span><br><br>
-          <a href="https://www.mintscan.io/juno" target="_blank" rel="noopener" style="color:var(--blue);font-family:var(--font-mono);font-size:11px;">View on Mintscan ↗</a>
+          Could not load staker data from DAO DAO indexer.<br>
+          <span style="font-family:var(--font-mono);font-size:11px;color:#555;">${esc(err.message)}</span><br><br>
+          <a href="https://daodao.zone/dao/${DAO_ADDRESS}" target="_blank" rel="noopener"
+             style="color:var(--blue);font-family:var(--font-mono);font-size:11px;">View on DAO DAO ↗</a>
         </div>`;
       }
     }
