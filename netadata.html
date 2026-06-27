@@ -278,15 +278,21 @@
   </footer>
 
   <script src="js/main.js"></script>
+  <!-- CosmJS via CDN for CORS-safe RPC queries -->
+  <script src="https://cdn.jsdelivr.net/npm/@cosmjs/cosmwasm-stargate@0.32.4/build/cosmwasmstargate.bundle.js"></script>
   <script>
   (() => {
-    const NETA_CONTRACT    = 'juno168ctmpyppk90d34p3jjy658zf5a5l3w8wk35wht6ccqj4mr0yv8s4j5awr';
-    const STAKING_CONTRACT = 'juno1s2dp05rspeuzzpzyzdchk262szehrtfpz847planned'; // filled below from DAO info
-    const LCD              = 'https://rest.cosmos.directory/juno';
-    const INDEXER          = 'https://indexer.daodao.zone/juno-1';
-    const DAO_ADDRESS      = 'juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6';
-    const MINTSCAN         = 'https://www.mintscan.io/juno';
-    const PAGE_SIZE        = 50;
+    const NETA_CONTRACT = 'juno168ctmpyppk90d34p3jjy658zf5a5l3w8wk35wht6ccqj4mr0yv8s4j5awr';
+    const INDEXER       = 'https://indexer.daodao.zone/juno-1';
+    const DAO_ADDRESS   = 'juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6';
+    const MINTSCAN      = 'https://www.mintscan.io/juno';
+    // RPC endpoints that allow browser connections
+    const RPC_ENDPOINTS = [
+      'https://rpc.cosmos.directory/juno',
+      'https://juno-rpc.polkachu.com',
+      'https://rpc-juno.itastakers.com',
+    ];
+    const PAGE_SIZE = 50;
 
     let allHolders  = [];
     let allStakers  = [];
@@ -298,120 +304,125 @@
     let totalSupply = 0;
     let stakingAddr = null;
     let balChart    = null;
+    let cosmClient  = null;
 
-    const fmt   = n => Number(n).toLocaleString('en-US', {maximumFractionDigits:4});
-    const fmtM  = n => { const v=Number(n); if(v>=1e6) return (v/1e6).toFixed(2)+'M'; if(v>=1e3) return (v/1e3).toFixed(1)+'K'; return v.toFixed(2); };
+    const fmt  = n => Number(n).toLocaleString('en-US', {maximumFractionDigits:4});
+    const fmtM = n => { const v=Number(n); if(v>=1e6) return (v/1e6).toFixed(2)+'M'; if(v>=1e3) return (v/1e3).toFixed(1)+'K'; return v.toFixed(2); };
     const short = a => a ? a.slice(0,10)+'…'+a.slice(-6) : '';
     const esc   = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    const b64q  = q => btoa(JSON.stringify(q));
 
-    async function lcd(path) {
-      const r = await fetch(LCD + path);
-      if (!r.ok) throw new Error('LCD '+r.status+' '+path);
-      return r.json();
-    }
-    async function indexer(path) {
-      const r = await fetch(INDEXER + path);
-      if (!r.ok) throw new Error('Indexer '+r.status+' '+path);
-      return r.json();
-    }
-
-    // ── Fetch staking contract address from DAO DAO indexer ──
-    async function fetchStakingAddr() {
-      try {
-        const data = await indexer(`/contract/${DAO_ADDRESS}/daoCore/dumpState`);
-        // voting_module contains the staking contract
-        const vm = data?.voting_module;
-        if (vm) {
-          const cfg = await indexer(`/contract/${vm}/daoVotingCw20Staked/stakingContract`);
-          return cfg?.stakingContractAddress || cfg?.staking_contract_address || null;
-        }
-      } catch(e) { console.warn('Could not fetch staking addr:', e); }
-      return null;
+    // ── Connect CosmJS via RPC (bypasses LCD CORS issues) ──
+    async function getClient() {
+      if (cosmClient) return cosmClient;
+      for (const rpc of RPC_ENDPOINTS) {
+        try {
+          cosmClient = await window.CosmWasmStargate.CosmWasmClient.connect(rpc);
+          console.log('Connected to', rpc);
+          return cosmClient;
+        } catch(e) { console.warn('RPC failed:', rpc, e.message); }
+      }
+      throw new Error('All RPC endpoints failed');
     }
 
-    // ── Fetch all CW20 holders via Polkachu LCD ──
-    async function fetchAllHolders() {
+    // ── Query CW20 contract via CosmJS ──
+    async function queryContract(query) {
+      const client = await getClient();
+      return client.queryContractSmart(NETA_CONTRACT, query);
+    }
+
+    // ── Fetch all CW20 holders ──
+    async function fetchAllHolders(onProgress) {
       let holders = [], startAfter = null;
       while (true) {
         const q = { all_accounts: { limit: 30, ...(startAfter ? { start_after: startAfter } : {}) } };
-        const data = await lcd(`/cosmwasm/wasm/v1/contract/${NETA_CONTRACT}/smart/${b64q(q)}`);
-        const accounts = data?.data?.accounts || [];
+        const data = await queryContract(q);
+        const accounts = data?.accounts || [];
         if (!accounts.length) break;
         holders = holders.concat(accounts);
         startAfter = accounts[accounts.length-1];
+        onProgress(holders.length);
         if (accounts.length < 30) break;
+        await new Promise(r => setTimeout(r, 50));
       }
       return holders;
     }
 
-    async function fetchBalances(addresses) {
+    // ── Fetch balance for one address ──
+    async function fetchBalance(address) {
+      try {
+        const data = await queryContract({ balance: { address } });
+        return parseFloat(data?.balance || '0') / 1e6;
+      } catch { return 0; }
+    }
+
+    // ── Fetch balances in chunks ──
+    async function fetchBalances(addresses, onProgress) {
       const results = [];
-      for (let i=0; i<addresses.length; i++) {
-        try {
-          const data = await lcd(`/cosmwasm/wasm/v1/contract/${NETA_CONTRACT}/smart/${b64q({balance:{address:addresses[i]}})}`);
-          results.push({ address: addresses[i], balance: parseFloat(data?.data?.balance||'0')/1e6 });
-        } catch { results.push({ address: addresses[i], balance: 0 }); }
-        if (i%10===9) await new Promise(r=>setTimeout(r,40));
+      const CHUNK = 10;
+      for (let i = 0; i < addresses.length; i += CHUNK) {
+        const chunk = addresses.slice(i, i+CHUNK);
+        const bals  = await Promise.all(chunk.map(a => fetchBalance(a)));
+        chunk.forEach((addr, j) => results.push({ address: addr, balance: bals[j] }));
+        onProgress(results.length, addresses.length);
+        await new Promise(r => setTimeout(r, 30));
       }
       return results;
-    }
-
-    // ── Fetch stakers from DAO DAO indexer ──
-    async function fetchStakers() {
-      if (!stakingAddr) return [];
-      try {
-        // Get all stakers with balances from indexer
-        const data = await indexer(`/contract/${stakingAddr}/daoStakeCw20/topStakers?limit=200`);
-        if (Array.isArray(data)) {
-          return data.map(s => ({
-            address: s.address,
-            balance: parseFloat(s.balance||s.staked||'0')/1e6
-          })).filter(s => s.balance > 0);
-        }
-      } catch(e) { console.warn('topStakers failed, trying allStakers:', e); }
-      try {
-        const data = await indexer(`/contract/${stakingAddr}/daoStakeCw20/allStakers`);
-        if (Array.isArray(data)) {
-          return data.map(s => ({
-            address: s.address,
-            balance: parseFloat(s.balance||s.staked||'0')/1e6
-          })).filter(s => s.balance > 0);
-        }
-      } catch(e) { console.warn('allStakers failed:', e); }
-      return [];
-    }
-
-    // ── Fetch staking history from DAO DAO indexer ──
-    async function fetchStakingHistory(address) {
-      if (!stakingAddr) return [];
-      try {
-        const data = await indexer(`/contract/${stakingAddr}/daoStakeCw20/stakedBalance?address=${address}`);
-        return data || [];
-      } catch { return []; }
-    }
-
-    // ── Fetch recent txs from Polkachu LCD ──
-    async function fetchTxs(address) {
-      try {
-        const url = `${LCD}/cosmos/tx/v1beta1/txs?events=wasm._contract_address%3D'${NETA_CONTRACT}'&events=message.sender%3D'${address}'&limit=15&order_by=ORDER_BY_DESC`;
-        const data = await fetch(url).then(r=>r.json());
-        return data?.txs || [];
-      } catch { return []; }
     }
 
     // ── Token supply ──
     async function fetchSupply() {
       try {
-        const data = await lcd(`/cosmwasm/wasm/v1/contract/${NETA_CONTRACT}/smart/${b64q({token_info:{}})}`);
-        return parseFloat(data?.data?.total_supply||'0')/1e6;
+        const data = await queryContract({ token_info: {} });
+        return parseFloat(data?.total_supply || '0') / 1e6;
       } catch { return 0; }
+    }
+
+    // ── DAO DAO indexer: staking contract ──
+    async function fetchStakingAddr() {
+      try {
+        const r = await fetch(`${INDEXER}/contract/${DAO_ADDRESS}/daoCore/dumpState`);
+        if (!r.ok) return null;
+        const d = await r.json();
+        const vm = d?.voting_module;
+        if (!vm) return null;
+        const r2 = await fetch(`${INDEXER}/contract/${vm}/daoVotingCw20Staked/stakingContract`);
+        if (!r2.ok) return null;
+        const d2 = await r2.json();
+        return d2?.stakingContractAddress || d2?.staking_contract_address || null;
+      } catch { return null; }
+    }
+
+    // ── DAO DAO indexer: all stakers ──
+    async function fetchStakers() {
+      if (!stakingAddr) return [];
+      try {
+        const r = await fetch(`${INDEXER}/contract/${stakingAddr}/daoStakeCw20/topStakers?limit=200`);
+        if (r.ok) {
+          const d = await r.json();
+          if (Array.isArray(d)) return d.map(s => ({ address: s.address, balance: parseFloat(s.balance||s.staked||'0')/1e6 })).filter(s=>s.balance>0);
+        }
+        const r2 = await fetch(`${INDEXER}/contract/${stakingAddr}/daoStakeCw20/allStakers`);
+        if (r2.ok) {
+          const d2 = await r2.json();
+          if (Array.isArray(d2)) return d2.map(s => ({ address: s.address, balance: parseFloat(s.balance||s.staked||'0')/1e6 })).filter(s=>s.balance>0);
+        }
+      } catch(e) { console.warn('Stakers fetch failed:', e); }
+      return [];
+    }
+
+    // ── Staking history from indexer ──
+    async function fetchStakingHistory(address) {
+      if (!stakingAddr) return [];
+      try {
+        const r = await fetch(`${INDEXER}/contract/${stakingAddr}/daoStakeCw20/stakedBalance?address=${address}`);
+        return r.ok ? (await r.json() || []) : [];
+      } catch { return []; }
     }
 
     // ── Render table ──
     function renderTable() {
-      const start = (currentPage-1)*PAGE_SIZE;
-      const page  = filtered.slice(start, start+PAGE_SIZE);
+      const start  = (currentPage-1)*PAGE_SIZE;
+      const page   = filtered.slice(start, start+PAGE_SIZE);
       const maxBal = filtered[0]?.balance || 1;
 
       if (!page.length) {
@@ -442,7 +453,6 @@
         });
       });
 
-      // Pagination
       const totalPages = Math.ceil(filtered.length/PAGE_SIZE);
       let pgHtml = '';
       if (totalPages > 1) {
@@ -474,8 +484,7 @@
     document.querySelectorAll('[data-col]').forEach(el => {
       el.addEventListener('click', () => {
         const col = el.dataset.col;
-        if(sortCol===col) sortDir=sortDir==='asc'?'desc':'asc';
-        else { sortCol=col; sortDir='desc'; }
+        if(sortCol===col) sortDir=sortDir==='asc'?'desc':'asc'; else { sortCol=col; sortDir='desc'; }
         document.querySelectorAll('.lb-header-cell').forEach(c=>c.classList.remove('sorted'));
         el.classList.add('sorted');
         applySort(); currentPage=1; renderTable();
@@ -483,9 +492,9 @@
     });
 
     document.getElementById('search-input').addEventListener('input', e => {
-      const q = e.target.value.trim().toLowerCase();
+      const q   = e.target.value.trim().toLowerCase();
       const src = currentTab==='stakers' ? allStakers : allHolders;
-      filtered = q ? src.filter(h=>h.address.toLowerCase().includes(q)) : [...src];
+      filtered  = q ? src.filter(h=>h.address.toLowerCase().includes(q)) : [...src];
       applySort(); currentPage=1; renderTable();
     });
 
@@ -495,15 +504,14 @@
         btn.classList.add('active');
         currentTab = btn.dataset.tab;
         document.getElementById('search-input').value = '';
-        const src = currentTab==='stakers' ? allStakers : allHolders;
-        filtered = [...src];
+        filtered = [...(currentTab==='stakers' ? allStakers : allHolders)];
         applySort(); currentPage=1; renderTable();
       });
     });
 
     // ── Drawer ──
     async function openDrawer(address, rank) {
-      const src = currentTab==='stakers' ? allStakers : allHolders;
+      const src    = currentTab==='stakers' ? allStakers : allHolders;
       const holder = src.find(h=>h.address===address);
       if (!holder) return;
 
@@ -515,7 +523,7 @@
 
       const pct = totalSupply ? ((holder.balance/totalSupply)*100).toFixed(4) : '—';
       document.getElementById('drawer-stats').innerHTML = `
-        <div class="drawer-stat"><div class="drawer-stat-label">${currentTab==='stakers'?'Staked':'$NETA Balance'}</div><div class="drawer-stat-val grad">${fmtM(holder.balance)}</div></div>
+        <div class="drawer-stat"><div class="drawer-stat-label">${currentTab==='stakers'?'Staked':'Balance'}</div><div class="drawer-stat-val grad">${fmtM(holder.balance)}</div></div>
         <div class="drawer-stat"><div class="drawer-stat-label">% of Supply</div><div class="drawer-stat-val">${pct}%</div></div>
         <div class="drawer-stat"><div class="drawer-stat-label">Rank</div><div class="drawer-stat-val">#${rank}</div></div>
         <div class="drawer-stat"><div class="drawer-stat-label">NETA Exact</div><div class="drawer-stat-val" style="font-size:14px;">${fmt(holder.balance)}</div></div>`;
@@ -527,7 +535,6 @@
       document.getElementById('tx-list').innerHTML = '<div class="empty-state" style="padding:20px 0;">Loading…</div>';
       document.getElementById('chart-title').textContent = currentTab==='stakers' ? 'Staking History (DAO DAO Indexer)' : 'Balance History';
 
-      // Fetch staking history if staker, else show estimated balance chart
       if (currentTab==='stakers' && stakingAddr) {
         const history = await fetchStakingHistory(address);
         renderHistoryChart(history, holder.balance);
@@ -535,39 +542,42 @@
         renderEstimatedChart(holder.balance);
       }
 
-      const txs = await fetchTxs(address);
-      renderTxList(txs, address);
+      // Recent txs via CosmJS
+      renderTxList([], address);
+      try {
+        const client = await getClient();
+        const txs = await client.searchTx([
+          { attributeKey: 'wasm._contract_address', attributeValue: NETA_CONTRACT },
+          { attributeKey: 'message.sender', attributeValue: address }
+        ]);
+        renderTxList(txs.slice(0,15).reverse(), address);
+      } catch(e) {
+        renderTxList([], address);
+      }
     }
 
     function renderHistoryChart(history, currentBal) {
       const canvas = document.getElementById('balance-chart');
       if (balChart) { balChart.destroy(); balChart=null; }
-
       let labels, data;
       if (history && history.length > 1) {
-        // Real data from DAO DAO indexer
         labels = history.map(p => new Date(p.at||p.blockHeight||0).toLocaleDateString('en-US',{month:'short',day:'numeric'}));
         data   = history.map(p => parseFloat(p.balance||p.staked||'0')/1e6);
       } else {
-        // Fallback: show current value as flat line with label
-        renderEstimatedChart(currentBal);
-        return;
+        renderEstimatedChart(currentBal); return;
       }
-
       balChart = new Chart(canvas, {
-        type: 'line',
-        data: { labels, datasets: [{ data, borderColor:'#5B8EF0', borderWidth:1.5, pointRadius:2, pointBackgroundColor:'#5B8EF0', tension:0.3, fill:true,
-          backgroundColor:(ctx)=>{ const g=ctx.chart.ctx.createLinearGradient(0,0,0,160); g.addColorStop(0,'rgba(91,142,240,0.18)'); g.addColorStop(1,'rgba(91,142,240,0)'); return g; } }] },
-        options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{ callbacks:{label:ctx=>` ${fmt(ctx.parsed.y)} NETA`}, backgroundColor:'#1a1a1a', borderColor:'#242424', borderWidth:1, titleColor:'#888', bodyColor:'#f0f0f0', titleFont:{family:'IBM Plex Mono',size:10}, bodyFont:{family:'IBM Plex Mono',size:11} }},
-          scales:{ x:{ticks:{color:'#555',font:{family:'IBM Plex Mono',size:9},maxTicksLimit:6},grid:{color:'#1a1a1a'}}, y:{ticks:{color:'#555',font:{family:'IBM Plex Mono',size:9},callback:v=>fmtM(v)},grid:{color:'#1a1a1a'}} } }
+        type:'line', data:{labels,datasets:[{data,borderColor:'#5B8EF0',borderWidth:1.5,pointRadius:2,pointBackgroundColor:'#5B8EF0',tension:0.3,fill:true,
+          backgroundColor:(ctx)=>{ const g=ctx.chart.ctx.createLinearGradient(0,0,0,160); g.addColorStop(0,'rgba(91,142,240,0.18)'); g.addColorStop(1,'rgba(91,142,240,0)'); return g; }}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.parsed.y)} NETA`},backgroundColor:'#1a1a1a',borderColor:'#242424',borderWidth:1,titleColor:'#888',bodyColor:'#f0f0f0',titleFont:{family:'IBM Plex Mono',size:10},bodyFont:{family:'IBM Plex Mono',size:11}}},
+          scales:{x:{ticks:{color:'#555',font:{family:'IBM Plex Mono',size:9},maxTicksLimit:6},grid:{color:'#1a1a1a'}},y:{ticks:{color:'#555',font:{family:'IBM Plex Mono',size:9},callback:v=>fmtM(v)},grid:{color:'#1a1a1a'}}}}
       });
     }
 
     function renderEstimatedChart(bal) {
       const canvas = document.getElementById('balance-chart');
       if (balChart) { balChart.destroy(); balChart=null; }
-      const pts=20, now=Date.now(), days=120;
-      const labels=[], data=[];
+      const pts=20, now=Date.now(), days=120, labels=[], data=[];
       let cur = bal*(0.5+Math.random()*0.2);
       for(let i=0;i<pts;i++) {
         labels.push(new Date(now-((pts-i)/pts)*days*86400000).toLocaleDateString('en-US',{month:'short',day:'numeric'}));
@@ -587,28 +597,31 @@
     function renderTxList(txs, address) {
       const el = document.getElementById('tx-list');
       if (!txs.length) {
-        el.innerHTML=`<div style="padding:12px 0;font-size:13px;color:var(--text-muted);">No recent $NETA transactions found via LCD.<br><a href="${MINTSCAN}/address/${address}" target="_blank" rel="noopener" style="color:var(--blue);font-family:var(--font-mono);font-size:11px;">View full history on Mintscan ↗</a></div>`;
+        el.innerHTML=`<div style="padding:12px 0;font-size:13px;color:var(--text-muted);">
+          No recent $NETA transactions found.<br>
+          <a href="${MINTSCAN}/address/${address}" target="_blank" rel="noopener" style="color:var(--blue);font-family:var(--font-mono);font-size:11px;">View on Mintscan ↗</a></div>`;
         return;
       }
-      el.innerHTML = txs.slice(0,15).map(tx => {
-        const hash = tx.txhash||'';
-        const time = tx.timestamp ? new Date(tx.timestamp).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
-        const msgs = tx.body?.messages||[];
-        const msgType = msgs[0]?.['@type']||'';
-        let type='other';
-        if(msgType.includes('MsgExecuteContract')) {
-          const wasm=msgs[0]?.msg;
-          if(wasm?.transfer||wasm?.send) type='send';
-          else if(wasm?.stake||wasm?.bond) type='stake';
-          else if(wasm?.unstake||wasm?.unbond) type='unstake';
-          else type='other';
+      el.innerHTML = txs.map(tx => {
+        const hash = tx.hash || '';
+        const time = tx.height ? `Block ${tx.height}` : '';
+        const msgs = tx.tx?.body?.messages || [];
+        const msgType = msgs[0]?.typeUrl || '';
+        let type = 'other';
+        if (msgType.includes('MsgExecuteContract')) {
+          try {
+            const msg = JSON.parse(atob(msgs[0].value?.msg || ''));
+            if (msg.transfer || msg.send) type='send';
+            else if (msg.stake || msg.bond) type='stake';
+            else if (msg.unstake || msg.unbond) type='unstake';
+          } catch { type='other'; }
         }
         return `<div class="tx-item">
           <span class="tx-type ${type}">${type}</span>
           <div><div class="tx-hash">${hash?hash.slice(0,16)+'…':''}</div><div class="tx-time">${time}</div></div>
           <a href="${MINTSCAN}/tx/${hash}" target="_blank" rel="noopener" style="font-family:var(--font-mono);font-size:10px;color:var(--blue);">↗</a>
         </div>`;
-      }).join('') + `<div style="padding:12px 0;"><a href="${MINTSCAN}/address/${address}" target="_blank" rel="noopener" style="font-family:var(--font-mono);font-size:11px;color:var(--blue);">View complete history on Mintscan ↗</a></div>`;
+      }).join('') + `<div style="padding:10px 0;"><a href="${MINTSCAN}/address/${address}" target="_blank" rel="noopener" style="font-family:var(--font-mono);font-size:11px;color:var(--blue);">Full history on Mintscan ↗</a></div>`;
     }
 
     function closeDrawer() {
@@ -624,47 +637,49 @@
     async function loadData() {
       const dot=document.getElementById('status-dot'), status=document.getElementById('status-text');
       try {
-        status.textContent='Fetching staking contract…';
+        status.textContent='Connecting to Juno…';
         const [supply, sAddr] = await Promise.all([fetchSupply(), fetchStakingAddr()]);
         totalSupply = supply;
         stakingAddr = sAddr;
         document.getElementById('stat-supply').textContent = fmtM(supply)+' NETA';
 
         status.textContent='Fetching all holder addresses…';
-        const addresses = await fetchAllHolders();
+        const addresses = await fetchAllHolders(n => {
+          status.textContent=`Found ${n} holders so far…`;
+        });
 
-        status.textContent=`Fetching balances for ${addresses.length.toLocaleString()} holders…`;
-        const CHUNK=30;
-        let holders=[];
-        for(let i=0;i<addresses.length;i+=CHUNK) {
-          const results = await fetchBalances(addresses.slice(i,i+CHUNK));
-          holders = holders.concat(results);
-          status.textContent=`Loading balances… ${Math.round((holders.length/addresses.length)*100)}%`;
-        }
+        status.textContent=`Fetching balances for ${addresses.length.toLocaleString()} wallets…`;
+        const holders = await fetchBalances(addresses, (done, total) => {
+          status.textContent=`Loading balances… ${Math.round((done/total)*100)}%`;
+        });
+
         allHolders = holders.filter(h=>h.balance>0).sort((a,b)=>b.balance-a.balance);
 
-        // Fetch stakers from DAO DAO indexer in parallel
-        status.textContent='Fetching staking data from DAO DAO indexer…';
+        status.textContent='Fetching staking data from DAO DAO…';
         allStakers = await fetchStakers();
         allStakers.sort((a,b)=>b.balance-a.balance);
 
         filtered = [...allHolders];
         applySort();
 
-        const top10sum = allHolders.slice(0,10).reduce((s,h)=>s+h.balance,0);
+        const top10 = allHolders.slice(0,10).reduce((s,h)=>s+h.balance,0);
         document.getElementById('stat-holders').textContent  = allHolders.length.toLocaleString();
-        document.getElementById('stat-top10').textContent    = supply?((top10sum/supply)*100).toFixed(1)+'%':'—';
+        document.getElementById('stat-top10').textContent    = supply?((top10/supply)*100).toFixed(1)+'%':'—';
         document.getElementById('stat-updated').textContent  = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
 
         dot.className='status-dot live';
-        status.textContent=`Live · ${allStakers.length} stakers · ${allHolders.length} holders`;
+        status.textContent=`Live · ${allHolders.length} holders · ${allStakers.length} stakers`;
         renderTable();
 
       } catch(err) {
         console.error('NetaDATA error:', err);
         dot.className='status-dot';
-        status.textContent='Error loading data — see console';
-        document.getElementById('lb-body').innerHTML=`<div class="empty-state">Failed to load data.<br><a href="https://www.mintscan.io/juno" target="_blank" rel="noopener" style="color:var(--blue);font-family:var(--font-mono);font-size:11px;">View on Mintscan ↗</a></div>`;
+        status.textContent='Error: '+err.message;
+        document.getElementById('lb-body').innerHTML=`<div class="empty-state">
+          Could not load data.<br>
+          <span style="font-family:var(--font-mono);font-size:11px;color:#555;">${err.message}</span><br><br>
+          <a href="https://www.mintscan.io/juno" target="_blank" rel="noopener" style="color:var(--blue);font-family:var(--font-mono);font-size:11px;">View on Mintscan ↗</a>
+        </div>`;
       }
     }
 
