@@ -163,16 +163,21 @@
   <nav class="site-nav">
     <div class="nav-inner">
       <a href="index.html" class="nav-logo">
-        <svg class="nav-logo-mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:40px;height:40px;">
+        <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:40px;height:40px;display:block;">
           <rect width="40" height="40" fill="#080808"/>
-          <rect x="0" y="16" width="40" height="8" fill="url(#ng)"/>
-          <text x="20" y="29" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-weight="900" font-size="28" fill="#f2f0eb">N</text>
-          <defs><linearGradient id="ng" x1="0" y1="0" x2="40" y2="0"><stop offset="0%" stop-color="#C9338A"/><stop offset="100%" stop-color="#5B8EF0"/></linearGradient></defs>
+          <defs>
+            <clipPath id="n-top-NAV"><polygon points="0,0 40,0 40,17 0,23"/></clipPath>
+            <clipPath id="n-bot-NAV"><polygon points="0,25 40,19 40,40 0,40"/></clipPath>
+            <linearGradient id="n-grad-NAV" x1="0" y1="0" x2="40" y2="0"><stop offset="0%" stop-color="#C9338A"/><stop offset="100%" stop-color="#5B8EF0"/></linearGradient>
+          </defs>
+          <polygon points="0,22 40,16 40,20 0,26" fill="url(#n-grad-NAV)" opacity="0.95"/>
+          <text clip-path="url(#n-top-NAV)" x="20" y="32" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-weight="900" font-size="32" fill="#f2f0eb">N</text>
+          <text clip-path="url(#n-bot-NAV)" x="21" y="33" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-weight="900" font-size="32" fill="#f2f0eb">N</text>
         </svg>
       </a>
       <ul class="nav-links">
         <li><a href="index.html">Home</a></li><li><a href="about.html">About</a></li>
-        <li><a href="governance.html">Governance</a></li><li><a href="https://academy.netadao.org">Academy</a></li>
+        <li><a href="getinvolved.html">Get Involved</a></li><li><a href="https://academy.netadao.org">Academy</a></li>
         <li><a href="netadata.html" class="active">NetaDATA</a></li>
         <li><a href="https://daodao.zone/dao/juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6" target="_blank" rel="noopener" class="nav-cta">DAO DAO ↗</a></li>
       </ul>
@@ -264,7 +269,7 @@
         <div><p class="footer-brand">Neta DAO</p><p class="footer-tagline">A public institution for the Interchain</p></div>
         <ul class="footer-links">
           <li><a href="about.html">About</a></li>
-          <li><a href="governance.html">Governance</a></li>
+          <li><a href="getinvolved.html">Get Involved</a></li>
           <li><a href="https://academy.netadao.org">Academy</a></li>
           <li><a href="netadata.html">NetaDATA</a></li>
           <li><a href="https://github.com/netadao" target="_blank" rel="noopener">GitHub</a></li>
@@ -287,8 +292,8 @@
     const NETA_CONTRACT    = 'juno168ctmpyppk90d34p3jjy658zf5a5l3w8wk35wht6ccqj4mr0yv8s4j5awr';
     const INDEXER          = 'https://indexer.daodao.zone/juno-1';
     const DAO_ADDRESS      = 'juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6';
-    // Known staking contract address (from DAO constitution / dumpState)
-    const STAKING_CONTRACT = 'juno1an3pf3e0q2vvjzcd2ffvzlf6s7e6c5uf0wy5cu25hgmz8r3jdhcq88gcq';
+    // Staking contract discovered dynamically from DAO DAO indexer dumpState
+    let STAKING_CONTRACT = null; // populated at runtime
     const MINTSCAN         = 'https://www.mintscan.io/juno';
     const PAGE_SIZE        = 50;
 
@@ -306,6 +311,10 @@
 
     // ── Fetch stakers from DAO DAO indexer (CORS-open) ──
     async function fetchStakers() {
+      if (!STAKING_CONTRACT) {
+        console.warn('No staking contract address available');
+        return [];
+      }
       // Try several indexer endpoint variants
       const endpoints = [
         `${INDEXER}/contract/${STAKING_CONTRACT}/daoStakeCw20/topStakers?limit=500`,
@@ -545,11 +554,35 @@
         // Set supply immediately — it's fixed
         document.getElementById('stat-supply').textContent = '30,222 NETA';
 
+        status.textContent='Discovering staking contract from DAO DAO indexer…';
+        // Dynamically discover staking contract from dumpState
+        try {
+          const dumpRes = await fetch(`${INDEXER}/contract/${DAO_ADDRESS}/daoCore/dumpState`);
+          if (dumpRes.ok) {
+            const dump = await dumpRes.json();
+            const vm = dump?.voting_module;
+            if (vm) {
+              status.textContent='Found voting module, fetching staking contract…';
+              const vmRes = await fetch(`${INDEXER}/contract/${vm}/daoVotingCw20Staked/stakingContract`);
+              if (vmRes.ok) {
+                const vmData = await vmRes.json();
+                STAKING_CONTRACT = vmData?.stakingContractAddress || vmData?.staking_contract_address || null;
+                if (STAKING_CONTRACT) {
+                  console.log('Staking contract discovered:', STAKING_CONTRACT);
+                }
+              }
+            }
+          }
+        } catch(e) {
+          console.warn('Could not discover staking contract dynamically:', e.message);
+        }
+
         status.textContent='Fetching stakers from DAO DAO indexer…';
         allStakers = await fetchStakers();
 
         if (!allStakers.length) {
-          throw new Error('No stakers returned from indexer. The staking contract address may have changed.');
+          // Non-fatal — show empty state with DAO DAO link
+          console.warn('No stakers returned. Contract may be inactive or indexer may not have data.');
         }
 
         allStakers.sort((a,b)=>b.balance-a.balance);

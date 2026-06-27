@@ -6,6 +6,24 @@
   <title>Neta DAO — A Public Institution for the Interchain</title>
   <meta name="description" content="Public blockchains deserve public institutions. Neta DAO is a nonprofit serving the Cosmos/Interchain through validator services, governance, and education." />
   <link rel="stylesheet" href="css/style.css" />
+  <style>
+    /* Hero N logo animation */
+    @keyframes n-pulse {
+      0%, 100% { opacity: 0.95; }
+      50% { opacity: 0.7; }
+    }
+    @keyframes n-shift {
+      0% { transform: translateX(0); }
+      50% { transform: translateX(3px); }
+      100% { transform: translateX(0); }
+    }
+    .hero-logo-panel svg polygon {
+      animation: n-pulse 3s ease-in-out infinite;
+    }
+    .hero-logo-panel svg text:last-of-type {
+      animation: n-shift 4s ease-in-out infinite;
+    }
+  </style>
 </head>
 <body>
 
@@ -13,17 +31,22 @@
   <nav class="site-nav">
     <div class="nav-inner">
 <a href="index.html" class="nav-logo">
-        <svg class="nav-logo-mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:40px;height:40px;">
+        <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:40px;height:40px;display:block;">
           <rect width="40" height="40" fill="#080808"/>
-          <rect x="0" y="16" width="40" height="8" fill="url(#ng)"/>
-          <text x="20" y="29" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-weight="900" font-size="28" fill="#f2f0eb">N</text>
-          <defs><linearGradient id="ng" x1="0" y1="0" x2="40" y2="0"><stop offset="0%" stop-color="#C9338A"/><stop offset="100%" stop-color="#5B8EF0"/></linearGradient></defs>
+          <defs>
+            <clipPath id="n-top-NAV"><polygon points="0,0 40,0 40,17 0,23"/></clipPath>
+            <clipPath id="n-bot-NAV"><polygon points="0,25 40,19 40,40 0,40"/></clipPath>
+            <linearGradient id="n-grad-NAV" x1="0" y1="0" x2="40" y2="0"><stop offset="0%" stop-color="#C9338A"/><stop offset="100%" stop-color="#5B8EF0"/></linearGradient>
+          </defs>
+          <polygon points="0,22 40,16 40,20 0,26" fill="url(#n-grad-NAV)" opacity="0.95"/>
+          <text clip-path="url(#n-top-NAV)" x="20" y="32" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-weight="900" font-size="32" fill="#f2f0eb">N</text>
+          <text clip-path="url(#n-bot-NAV)" x="21" y="33" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-weight="900" font-size="32" fill="#f2f0eb">N</text>
         </svg>
       </a>
       <ul class="nav-links">
         <li><a href="index.html" class="active">Home</a></li>
         <li><a href="about.html">About</a></li>
-        <li><a href="governance.html">Governance</a></li>
+        <li><a href="getinvolved.html">Get Involved</a></li>
         <li><a href="https://academy.netadao.org">Academy</a></li>
         <li><a href="netadata.html">NetaDATA</a></li>
         <li><a href="https://daodao.zone/dao/juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6" target="_blank" rel="noopener" class="nav-cta">DAO DAO ↗</a></li>
@@ -45,33 +68,30 @@
       </div>
     </div>
     <div class="hero-logo-panel">
-      <svg viewBox="0 0 320 320" width="320" height="320" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;max-height:100%;">
-        <rect width="320" height="320" fill="#0f0f0f"/>
-        <!-- Gradient bar cuts through the N -->
-        <rect x="0" y="124" width="320" height="72" fill="url(#hg)"/>
-        <!-- N letterform on top of gradient -->
-        <text x="160" y="234" text-anchor="middle" font-family="'Barlow Condensed', sans-serif" font-weight="900" font-size="284" fill="#f2f0eb" letter-spacing="-4">N</text>
-        <!-- Registration marks -->
-        <line x1="0" y1="0" x2="20" y2="0" stroke="#333" stroke-width="1"/>
-        <line x1="0" y1="0" x2="0" y2="20" stroke="#333" stroke-width="1"/>
-        <line x1="320" y1="0" x2="300" y2="0" stroke="#333" stroke-width="1"/>
-        <line x1="320" y1="0" x2="320" y2="20" stroke="#333" stroke-width="1"/>
-        <line x1="0" y1="320" x2="20" y2="320" stroke="#333" stroke-width="1"/>
-        <line x1="0" y1="320" x2="0" y2="300" stroke="#333" stroke-width="1"/>
-        <line x1="320" y1="320" x2="300" y2="320" stroke="#333" stroke-width="1"/>
-        <line x1="320" y1="320" x2="320" y2="300" stroke="#333" stroke-width="1"/>
-        <defs>
-          <linearGradient id="hg" x1="0" y1="0" x2="320" y2="0">
-            <stop offset="0%" stop-color="#C9338A"/>
-            <stop offset="100%" stop-color="#5B8EF0"/>
-          </linearGradient>
-        </defs>
-      </svg>
+      <svg viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;max-height:100%;display:block;">
+      <rect width="320" height="320" fill="#0f0f0f"/>
+      <defs>
+        <clipPath id="ht-H"><polygon points="0,0 320,0 320,136 0,162"/></clipPath>
+        <clipPath id="hb-H"><polygon points="0,168 320,142 320,320 0,320"/></clipPath>
+        <linearGradient id="hg-H" x1="0" y1="0" x2="320" y2="0"><stop offset="0%" stop-color="#C9338A"/><stop offset="100%" stop-color="#5B8EF0"/></linearGradient>
+      </defs>
+      <polygon points="0,161 320,135 320,143 0,169" fill="url(#hg-H)" opacity="0.95"/>
+      <text clip-path="url(#ht-H)" x="160" y="250" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-weight="900" font-size="280" fill="#f2f0eb" letter-spacing="-4">N</text>
+      <text clip-path="url(#hb-H)" x="168" y="258" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-weight="900" font-size="280" fill="#f2f0eb" letter-spacing="-4">N</text>
+      <line x1="0" y1="0" x2="20" y2="0" stroke="#333" stroke-width="1"/>
+      <line x1="0" y1="0" x2="0" y2="20" stroke="#333" stroke-width="1"/>
+      <line x1="320" y1="0" x2="300" y2="0" stroke="#333" stroke-width="1"/>
+      <line x1="320" y1="0" x2="320" y2="20" stroke="#333" stroke-width="1"/>
+      <line x1="0" y1="320" x2="20" y2="320" stroke="#333" stroke-width="1"/>
+      <line x1="0" y1="320" x2="0" y2="300" stroke="#333" stroke-width="1"/>
+      <line x1="320" y1="320" x2="300" y2="320" stroke="#333" stroke-width="1"/>
+      <line x1="320" y1="320" x2="320" y2="300" stroke="#333" stroke-width="1"/>
+    </svg>
     </div>
   </div>
 
-  <!-- ── Three Pillars ── -->
-  <div class="panel reveal">
+  <!-- ── Three Pillars / Initiatives ── -->
+  <div class="panel panel-reversed reveal">
     <div class="panel-inner-sm" style="border-bottom:var(--panel-border);">
       <p class="section-label">What we do</p>
     </div>
@@ -94,21 +114,21 @@
     </div>
   </div>
 
-  <!-- ── Origin — reversed panel ── -->
-  <div class="panel panel-reversed reveal">
+  <!-- ── Origin — Juno salmon ── -->
+  <div class="panel reveal" style="background:#E06B54;">
     <div class="two-col">
       <div>
-        <p class="section-label" style="color:#555;">Origin</p>
+        <p class="section-label" style="color:#80312a;">Origin</p>
         <h2 class="section-title" style="color:var(--ink);">Born from the first proposals of Juno</h2>
         <p class="section-body">The $NETA token was not created by this DAO. It was airdropped by the Juno Core-1 team to wallets that had participated in the very first governance proposals of the Juno Network — a recognition of civic engagement, not economic activity.</p>
         <div style="margin-top:32px;">
-          <a href="about.html" class="btn btn-outline-ink">Read the full story</a>
+          <a href="about.html" class="btn" style="border:3px solid #080808;background:transparent;color:#080808;">Read the full story</a>
         </div>
       </div>
       <div>
-        <p class="section-body" style="margin-bottom:24px;">Those early participants showed up to vote before it was profitable to do so. The airdrop was a statement that this kind of participation had value beyond price speculation.</p>
-        <p class="section-body" style="margin-bottom:24px;">Neta DAO formed to honor and extend those values. We are stewards of a community defined by its commitment to governance. Our organization is governed by the Neta DAO Constitution, ratified on-chain, with weekly Congressional meetings open to all members.</p>
-        <p style="font-family:var(--font-mono);font-size:10px;color:#888;line-height:1.6;word-break:break-all;">juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6</p>
+        <p class="section-body" style="margin-bottom:24px;color:#1a0a08;">Those early participants showed up to vote before it was profitable to do so. The airdrop was a statement that this kind of participation had value beyond price speculation.</p>
+        <p class="section-body" style="margin-bottom:24px;color:#1a0a08;">Neta DAO formed to honor and extend those values. We are stewards of a community defined by its commitment to governance. Our organization is governed by the Neta DAO Constitution, ratified on-chain, with weekly Congressional meetings open to all members.</p>
+        <p style="font-family:var(--font-mono);font-size:10px;color:#5a2820;line-height:1.6;word-break:break-all;">juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6</p>
       </div>
     </div>
   </div>
@@ -141,7 +161,7 @@
       <div class="footer-links-cell">
         <ul class="footer-links">
           <li><a href="about.html">About</a></li>
-          <li><a href="governance.html">Governance</a></li>
+          <li><a href="getinvolved.html">Get Involved</a></li>
           <li><a href="https://academy.netadao.org">Academy</a></li>
           <li><a href="netadata.html">NetaDATA</a></li>
           <li><a href="https://github.com/netadao" target="_blank" rel="noopener">GitHub ↗</a></li>
