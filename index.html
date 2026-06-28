@@ -135,17 +135,41 @@
 
   <!-- ── Academy ── -->
   <div class="panel panel-ink reveal">
-    <div class="panel-inner">
+    <div class="panel-inner-sm" style="border-bottom:var(--panel-border);">
       <p class="section-label">Educational Initiative</p>
       <h2 class="section-title">Neta DAO <span class="grad-text">Academy</span></h2>
-      <p class="section-body" style="margin-bottom:28px;">An educational subDAO approaching Web3 as political and philosophical terrain — with special attention to post-Lacanian philosophy and the theory of decentralized governance.</p>
-      <!-- Current series callout -->
-      <div style="border:1px solid #333;padding:20px 24px;margin-bottom:28px;background:#0a0a0a;">
-        <p style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--pink);margin-bottom:8px;">● Currently Running</p>
-        <p style="font-family:var(--font-display);font-size:22px;font-weight:900;text-transform:uppercase;margin-bottom:4px;">Sex, and/or Love</p>
-        <p style="font-family:var(--font-mono);font-size:11px;color:var(--paper-dim);">Psychoanalysis and the Science of Desire · Free · Open to all</p>
+      <p class="section-body">An educational subDAO approaching Web3 as political and philosophical terrain — with special attention to post-Lacanian philosophy and the theory of decentralized governance.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;">
+
+      <!-- Active series -->
+      <div style="padding:32px 36px;border-right:var(--panel-border);">
+        <p style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--pink);margin-bottom:12px;">● Currently Running</p>
+        <p style="font-family:var(--font-display);font-size:24px;font-weight:900;text-transform:uppercase;margin-bottom:4px;">Sex, and/or Love</p>
+        <p style="font-family:var(--font-mono);font-size:11px;color:var(--paper-dim);margin-bottom:24px;">Psychoanalysis and the Science of Desire · Free · Open to all</p>
+        <a href="https://academy.netadao.org" class="btn btn-outline">Visit the Academy →</a>
       </div>
-      <a href="https://academy.netadao.org" class="btn btn-outline">Visit the Academy →</a>
+
+      <!-- Fork callout -->
+      <div style="padding:32px 36px;display:flex;flex-direction:column;justify-content:space-between;">
+        <div>
+          <p style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:#9aa0b8;margin-bottom:16px;">Forthcoming</p>
+          <!-- Bisected FORK logo -->
+          <svg viewBox="0 0 280 116" width="200" height="83" xmlns="http://www.w3.org/2000/svg" style="display:block;margin-bottom:16px;">
+            <defs>
+              <clipPath id="ft"><polygon points="0,0 280,0 280,49 0,67"/></clipPath>
+              <clipPath id="fb"><polygon points="7,70 287,52 287,128 7,128"/></clipPath>
+              <linearGradient id="fg" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#C9338A"/><stop offset="100%" stop-color="#5B8EF0"/></linearGradient>
+            </defs>
+            <polygon points="0,65 280,47 280,53 0,71" fill="url(#fg)" opacity="0.95"/>
+            <text clip-path="url(#ft)" x="0" y="98" font-family="'Barlow Condensed',sans-serif" font-weight="900" font-size="98" fill="#f2f0eb" letter-spacing="-2">FORK</text>
+            <text clip-path="url(#fb)" x="7" y="104" font-family="'Barlow Condensed',sans-serif" font-weight="900" font-size="98" fill="#f2f0eb" letter-spacing="-2">FORK</text>
+          </svg>
+          <p style="font-size:13px;color:var(--paper-dim);line-height:1.65;margin-bottom:24px;">The Journal of Interchain Theory and Politics — an open-access, peer-reviewed journal published by Neta DAO Academy. Vol. 0 forthcoming.</p>
+        </div>
+        <a href="https://fork.netadao.org" target="_blank" rel="noopener" class="btn btn-outline">Visit fork.netadao.org →</a>
+      </div>
+
     </div>
   </div>
 
