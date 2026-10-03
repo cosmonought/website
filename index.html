@@ -6,24 +6,7 @@
   <title>Neta DAO — A Public Institution for the Interchain</title>
   <meta name="description" content="Public blockchains deserve public institutions. Neta DAO is a nonprofit serving the Cosmos/Interchain through validator services, governance, and education." />
   <link rel="stylesheet" href="css/style.css" />
-  <style>
-    /* Hero N logo animation */
-    @keyframes n-pulse {
-      0%, 100% { opacity: 0.95; }
-      50% { opacity: 0.7; }
-    }
-    @keyframes n-shift {
-      0% { transform: translateX(0); }
-      50% { transform: translateX(3px); }
-      100% { transform: translateX(0); }
-    }
-    .hero-logo-panel svg polygon {
-      animation: n-pulse 3s ease-in-out infinite;
-    }
-    .hero-logo-panel svg text:last-of-type {
-      animation: n-shift 4s ease-in-out infinite;
-    }
-  </style>
+  <script src="/radio/radio.js" defer></script>
 </head>
 <body>
 
@@ -31,17 +14,7 @@
   <nav class="site-nav">
     <div class="nav-inner">
 <a href="index.html" class="nav-logo">
-        <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:40px;height:40px;display:block;">
-          <rect width="40" height="40" fill="#080808"/>
-          <defs>
-            <linearGradient id="ng" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stop-color="#C9338A"/>
-              <stop offset="100%" stop-color="#5B8EF0"/>
-            </linearGradient>
-          </defs>
-          <text x="20" y="31" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-weight="900" font-size="34" fill="#f2f0eb">N</text>
-          <polygon points="0,17 40,11 40,20 0,26" fill="url(#ng)"/>
-        </svg>
+        <img class="nav-logo-mark" src="images/neta-mark-night.png" alt="Neta DAO" width="251" height="192">
       </a>
       <ul class="nav-links">
         <li><a href="index.html" class="active">Home</a></li>
@@ -68,25 +41,10 @@
       </div>
     </div>
     <div class="hero-logo-panel">
-      <svg viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;max-height:100%;display:block;">
-      <rect width="320" height="320" fill="#0f0f0f"/>
-      <defs>
-        <linearGradient id="hg" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stop-color="#C9338A"/>
-          <stop offset="100%" stop-color="#5B8EF0"/>
-        </linearGradient>
-      </defs>
-      <text x="160" y="248" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-weight="900" font-size="280" fill="#f2f0eb" letter-spacing="-4">N</text>
-      <polygon points="0,138 320,112 320,142 0,168" fill="url(#hg)"/>
-      <line x1="0" y1="0" x2="20" y2="0" stroke="#333" stroke-width="1"/>
-      <line x1="0" y1="0" x2="0" y2="20" stroke="#333" stroke-width="1"/>
-      <line x1="320" y1="0" x2="300" y2="0" stroke="#333" stroke-width="1"/>
-      <line x1="320" y1="0" x2="320" y2="20" stroke="#333" stroke-width="1"/>
-      <line x1="0" y1="320" x2="20" y2="320" stroke="#333" stroke-width="1"/>
-      <line x1="0" y1="320" x2="0" y2="300" stroke="#333" stroke-width="1"/>
-      <line x1="320" y1="320" x2="300" y2="320" stroke="#333" stroke-width="1"/>
-      <line x1="320" y1="320" x2="320" y2="300" stroke="#333" stroke-width="1"/>
-    </svg>
+      <video class="hero-mark" autoplay muted loop playsinline preload="auto" poster="images/neta-mark-poster.webp" aria-label="The Neta DAO mark">
+        <source src="video/neta-mark-loop.webm" type="video/webm">
+        <source src="video/neta-mark-loop.mp4" type="video/mp4">
+      </video>
     </div>
   </div>
 

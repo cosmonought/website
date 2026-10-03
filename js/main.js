@@ -124,3 +124,13 @@ function escHtml(str) {
 
 // Export for use on specific pages
 window.NetaDAO = { loadProposals };
+
+// The hero mark holds still for anyone who asks for less motion.
+(function () {
+  var v = document.querySelector('.hero-mark');
+  if (!v || !window.matchMedia) return;
+  var mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+  function apply() { if (mq.matches) { v.pause(); v.currentTime = 0; } else { var p = v.play(); if (p && p.catch) p.catch(function () {}); } }
+  apply();
+  if (mq.addEventListener) mq.addEventListener('change', apply);
+})();

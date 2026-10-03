@@ -599,3 +599,11 @@ a { color: inherit; text-decoration: none; }
   .proposal-item { grid-template-columns: 48px 1fr; }
   .proposal-badge-cell { display: none; }
 }
+
+/* ── The Neta mark: the supplied artwork, not a redrawing ─── */
+.nav-logo-mark { width: auto; height: 30px; }
+.hero-logo-panel { padding: 0; }
+.hero-mark {
+  display: block; width: 100%; max-width: 560px; aspect-ratio: 1; object-fit: contain;
+  mix-blend-mode: screen;   /* the clip's black drops out into the panel */
+}
