@@ -27,6 +27,13 @@
  *   <meta name="netadao-radio" content="handoff">
  * And a link marked  data-radio="leave"  is followed as an ordinary link, outside the shell, which ends
  * this radio.
+ *
+ * A page that plays a short sound of its own (the Academy intro's soundtrack) can lower the radio under it
+ * instead of stopping it, and raise it again after; the radio comes back by itself after forMs at the latest,
+ * or as soon as another page loads in the shell:
+ *   window.NetaDAORadio?.duck(true, 13000);   // lower it (about a fifth of its volume)
+ *   window.NetaDAORadio?.duck(false);         // bring it back up
+ * (iPhones and iPads don't let a page set an audio volume, so there it plays on at its own level.)
  */
 (() => {
   if (window.__netadaoRadio) return;
@@ -140,6 +147,7 @@
     window.NetaDAORadio = {
       handOff() { const was = parentState === 'on'; handed = true; parentState = 'off'; tell({ type: 'ndr:handoff' }); return was; },
       takeBack() { handed = false; tell({ type: 'ndr:takeback' }); },
+      duck(on, forMs) { tell({ type: 'ndr:duck', on: !!on, forMs: forMs }); },
       get playing() { return parentState === 'on'; },
       get framed() { return true; },
     };
@@ -181,8 +189,37 @@
   try { const v = localStorage.getItem('ndr-volume'); if (v !== null && Number(v) >= 0 && Number(v) <= 100) savedVolume = Number(v); } catch (_) {}
   volume.value = String(savedVolume);
   audio.volume = savedVolume / 100;
+
+  // Ducking: another sound lowers the radio for a while. The slider keeps showing the listener's own
+  // volume; while ducked, the radio plays at DUCK of it. Moves between the two are ramped.
+  const DUCK = 0.2;
+  let ducked = false;
+  let duckTimer = 0;
+  let rampFrame = 0;
+  const level = () => (Number(volume.value) / 100) * (ducked ? DUCK : 1);
+  const rampTo = (target, ms) => {
+    cancelAnimationFrame(rampFrame);
+    const from = audio.volume;
+    const t0 = performance.now();
+    const step = (now) => {
+      const k = Math.min(1, (now - t0) / ms);
+      try { audio.volume = from + (target - from) * k; } catch (_) {}
+      if (k < 1) rampFrame = requestAnimationFrame(step);
+    };
+    rampFrame = requestAnimationFrame(step);
+  };
+  const duck = (on, forMs) => {
+    clearTimeout(duckTimer);
+    on = !!on;
+    if (on && forMs > 0) duckTimer = setTimeout(() => duck(false), Math.min(forMs, 60000));
+    if (on === ducked) return;
+    ducked = on;
+    rampTo(level(), on ? 350 : 1200);
+  };
+
   volume.addEventListener('input', () => {
-    audio.volume = Number(volume.value) / 100;
+    cancelAnimationFrame(rampFrame);
+    audio.volume = level();
     try { localStorage.setItem('ndr-volume', volume.value); } catch (_) {}
   });
 
@@ -252,6 +289,7 @@
 
   /* ---------------------------------------------------------------- the shell */
   let hidden = [];
+  let framePage = '';
   const baseUrl = location.href.split('#')[0];
   const originalTitle = document.title;
 
@@ -289,9 +327,13 @@
     const data = event.data || {};
     if (data.type === 'ndr:handoff') return void handOff();
     if (data.type === 'ndr:takeback') return void takeBack();
+    if (data.type === 'ndr:duck') return void duck(data.on, Number(data.forMs) || 0);
     if (data.type !== 'ndr:page') return;
     let url;
     try { url = new URL(data.href); } catch (_) { return; }
+    // A new page in the frame (not the same one announcing itself again): whatever lowered the radio has gone.
+    const page = url.href.split('#')[0];
+    if (page !== framePage) { framePage = page; if (ducked) duck(false); }
     if (!isFamily(url) || url.origin !== event.origin) return;
     frameOrigin = url.origin;
     if (data.handoff) handOff(); else if (handed) takeBack();
@@ -338,8 +380,9 @@
   if (ownsRadio()) handOff();
 
   window.NetaDAORadio = {
-    start, stop, handOff, takeBack, audio,
+    start, stop, handOff, takeBack, duck, audio,
     get state() { return state; },
+    get ducked() { return ducked; },
     get playing() { return state !== 'off'; },
     get inShell() { return !!frame; },
     get framed() { return false; },
