@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NetaDATA — Neta DAO</title>
   <meta name="description" content="Real-time leaderboard of all wallets holding $NETA, with staking history and transaction data." />
-  <link rel="stylesheet" href="css/style.css" />
+  <meta name="theme-color" content="#000000" />
+  <link rel="stylesheet" href="css/night.css?v=1" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <style>
     .summary-bar {
@@ -16,7 +17,7 @@
       border: var(--rule);
       border-radius: 4px;
       overflow: hidden;
-      margin-bottom: 28px;
+      margin-bottom: 0;
     }
     .summary-stat { background: var(--bg-panel); padding: 20px; }
     .summary-stat-label { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
@@ -157,45 +158,40 @@
       .wallet-drawer { width: 100vw; }
       .summary-bar { grid-template-columns: 1fr 1fr; }
     }
+    .nd-head { align-items: center; }
+    .nd-head .ns-pagehead__aside { flex: 1 1 520px; max-width: 640px; }
+    .nd-board .data-header .section-title { margin-bottom: 0; }
+    .nd-source { margin-top: 28px; }
   </style>
   <script src="/radio/radio.js" defer></script>
 </head>
 <body>
-  <nav class="site-nav">
-    <div class="nav-inner">
-      <a href="index.html" class="nav-logo">
-        <img class="nav-logo-mark" src="images/neta-mark-night.png" alt="Neta DAO" width="251" height="192">
-      </a>
-      <ul class="nav-links">
-        <li><a href="index.html">Home</a></li><li><a href="about.html">About</a></li>
-        <li><a href="getinvolved.html">Get Involved</a></li><li><a href="https://academy.netadao.org">Academy</a></li>
-        <li><a href="netadata.html" class="active">NetaDATA</a></li>
-        <li><a href="https://daodao.zone/dao/juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6" target="_blank" rel="noopener" class="nav-cta">DAO DAO ↗</a></li>
-      </ul>
-      <button class="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
+<a class="ns-skip" href="#main">Skip to content</a>
+<header class="ns-header">
+  <div class="ns-wrap ns-header__inner">
+    <a class="ns-brand" href="/"><img src="images/neta-mark-night.png" alt="" width="251" height="192"><span>Neta DAO</span></a>
+    <nav class="ns-nav" aria-label="Main"><a href="about.html">About</a><a href="governance.html">Governance</a><a href="netadata.html" aria-current="page">NetaDATA</a><a href="getinvolved.html">Get involved</a><a class="ns-pill" href="https://daodao.zone/dao/juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6" target="_blank" rel="noopener">DAO DAO ↗</a></nav>
+  </div>
+</header>
+<main id="main">
+  <section class="ns-wrap ns-pagehead nd-head" aria-labelledby="nd-title">
+    <div class="ns-pagehead__copy">
+      <p class="ns-kicker">On-chain · Live from Juno · $NETA</p>
+      <h1 class="ns-h1 ns-h1--page" id="nd-title">Neta<span class="ns-grad">DATA</span></h1>
+      <p class="ns-lede">Real-time leaderboard of every wallet holding or staking $NETA, sourced from Polkachu LCD and the DAO DAO indexer. Click any address to explore their history.</p>
     </div>
-  </nav>
-
-  <div style="margin-top:56px;border-bottom:var(--panel-border);border-top:var(--panel-border);">
-    <div style="display:grid;grid-template-columns:1fr 1fr;">
-      <div style="padding:56px 48px;border-right:var(--panel-border);">
-        <p class="section-label">On-chain · Live from Juno · $NETA</p>
-        <h1 class="section-title">Neta<span class="grad-text">DATA</span></h1>
-        <p class="section-body">Real-time leaderboard of every wallet holding or staking $NETA, sourced from Polkachu LCD and the DAO DAO indexer. Click any address to explore their history.</p>
-      </div>
-      <div style="padding:56px 48px;display:flex;align-items:center;">
-        <div class="summary-bar" style="width:100%;margin-bottom:0;">
+    <div class="ns-pagehead__aside">
+        <div class="summary-bar">
           <div class="summary-stat"><div class="summary-stat-label">Active Stakers</div><div class="summary-stat-val" id="stat-holders">—</div></div>
           <div class="summary-stat"><div class="summary-stat-label">Total Supply</div><div class="summary-stat-val" id="stat-supply">—</div></div>
           <div class="summary-stat"><div class="summary-stat-label">Top 10 Share</div><div class="summary-stat-val" id="stat-top10">—</div></div>
           <div class="summary-stat"><div class="summary-stat-label">Updated</div><div class="summary-stat-val" id="stat-updated" style="font-size:14px;">—</div></div>
         </div>
-      </div>
     </div>
-  </div>
+  </section>
 
-  <div class="panel">
-    <div class="container">
+  <section class="ns-section--rule nd-board" aria-label="Leaderboard">
+    <div class="ns-wrap ns-section">
       <div class="data-header">
         <div>
           <p class="section-label">$NETA Wallets</p>
@@ -228,8 +224,10 @@
         <div id="lb-body"><div class="empty-state">Loading…</div></div>
       </div>
       <div class="pagination" id="pagination"></div>
+      <p class="ns-mono nd-source">Data: Polkachu LCD + DAO DAO indexer · $NETA: juno168ctmpyppk90d34p3jjy658zf5a5l3w8wk35wht6ccqj4mr0yv8s4j5awr</p>
     </div>
-  </div>
+  </section>
+</main>
 
   <div class="drawer-overlay" id="drawer-overlay"></div>
   <div class="wallet-drawer" id="wallet-drawer">
@@ -254,26 +252,14 @@
     </div>
   </div>
 
-  <footer class="site-footer">
-    <div class="container">
-      <div class="footer-inner">
-        <div><p class="footer-brand">Neta DAO</p><p class="footer-tagline">A public institution for the Interchain</p></div>
-        <ul class="footer-links">
-          <li><a href="about.html">About</a></li>
-          <li><a href="getinvolved.html">Get Involved</a></li>
-          <li><a href="https://academy.netadao.org">Academy</a></li>
-          <li><a href="netadata.html">NetaDATA</a></li>
-          <li><a href="https://github.com/netadao" target="_blank" rel="noopener">GitHub</a></li>
-        </ul>
-      </div>
-      <div class="footer-bottom">
-        <p class="footer-copy">© Neta DAO. Data: Polkachu LCD + DAO DAO Indexer.</p>
-        <p class="footer-copy" style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);">$NETA: juno168ctmpyppk90d34p3jjy658zf5a5l3w8wk35wht6ccqj4mr0yv8s4j5awr</p>
-      </div>
-    </div>
-  </footer>
-
-  <script src="js/main.js"></script>
+<footer class="ns-footer">
+  <div class="ns-wrap ns-footer__inner">
+    <a class="ns-footer__brand" href="/"><img src="images/neta-mark-loop-small.webp" alt="" width="160" height="106" loading="lazy">Neta DAO</a>
+    <span class="ns-footer__addr">juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6</span>
+    <nav aria-label="Footer"><a href="https://academy.netadao.org">Academy</a><a href="https://fork.netadao.org">Fork</a><a href="https://play.netadao.org">Play</a><a href="https://github.com/netadao" target="_blank" rel="noopener">GitHub</a></nav>
+  </div>
+</footer>
+<script src="js/main.js"></script>
   <script>
   (() => {
     // ── Constants ──

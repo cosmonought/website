@@ -49,9 +49,11 @@ async function loadProposals(containerSelector, limit = 10) {
     let allProposals = [];
 
     for (const mod of modules) {
-      const propRes = await fetch(
-        `${INDEXER_BASE}/contract/${mod.address}/daoProposalSingle/proposals?limit=${limit}&order=desc`
+      // the indexer's formula for the newest proposals first (it no longer answers to daoProposalSingle/proposals)
+      let propRes = await fetch(
+        `${INDEXER_BASE}/contract/${mod.address}/daoProposalSingle/reverseProposals?limit=${limit}`
       );
+      if (!propRes.ok) propRes = await fetch(`${INDEXER_BASE}/contract/${mod.address}/daoProposalSingle/listProposals?limit=${limit}`);
       if (!propRes.ok) continue;
       const data = await propRes.json();
       const proposals = Array.isArray(data) ? data : (data.proposals || []);
@@ -76,9 +78,9 @@ async function loadProposals(containerSelector, limit = 10) {
       const title  = p.proposal?.title || p.title || 'Untitled Proposal';
       const id     = p.id ?? '—';
       const prefix = p.modulePrefix || '';
-      const date   = p.proposal?.start_height
-        ? `Block ${p.proposal.start_height}`
-        : (p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-US', {year:'numeric',month:'short',day:'numeric'}) : '');
+      const date   = p.createdAt
+        ? new Date(p.createdAt).toLocaleDateString('en-US', {year:'numeric',month:'short',day:'numeric',timeZone:'UTC'})
+        : (p.proposal?.start_height ? `Block ${p.proposal.start_height}` : '');
 
       const badgeClass = {
         passed:   'badge-passed',
@@ -134,3 +136,12 @@ window.NetaDAO = { loadProposals };
   apply();
   if (mq.addEventListener) mq.addEventListener('change', apply);
 })();
+
+// The Academy's word on the homepage fills with its pigment film on hover; the film loads the first time.
+document.querySelectorAll('[data-film]').forEach(function (card) {
+  var film = card.querySelector('.ns-liquid__film');
+  if (!film) return;
+  function load() { if (!film.style.backgroundImage) film.style.backgroundImage = 'url(' + card.getAttribute('data-film') + ')'; }
+  card.addEventListener('pointerenter', load);
+  card.addEventListener('focus', load);
+});

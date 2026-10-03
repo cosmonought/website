@@ -4,98 +4,86 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Governance — Neta DAO</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <meta name="description" content="Neta DAO’s governance proposals, live from the Juno chain through the DAO DAO indexer." />
+  <meta name="theme-color" content="#000000" />
+  <link rel="stylesheet" href="css/night.css?v=1" />
   <style>
-    .gov-layout { display:grid; grid-template-columns:1fr 320px; border-top:var(--panel-border); }
-    .gov-main   { border-right:var(--panel-border); padding:0; }
-    .gov-sidebar { padding:0; }
-    .sidebar-section { padding:24px 28px; border-bottom:var(--panel-border); }
-    .sidebar-section h4 { font-family:var(--font-display); font-size:18px; font-weight:900; text-transform:uppercase; margin-bottom:12px; }
-    .sidebar-section p  { font-size:13px; color:var(--paper-dim); line-height:1.65; margin-bottom:12px; }
-    .sidebar-stat { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--rule-thin); font-size:13px; }
-    .sidebar-stat:last-child { border-bottom:none; padding-bottom:0; }
-    .sidebar-stat-label { font-family:var(--font-mono); font-size:10px; color:#555; letter-spacing:0.06em; text-transform:uppercase; }
-    .sidebar-stat-val   { font-family:var(--font-mono); font-size:11px; color:var(--paper); }
-    .filter-row { display:flex; border-bottom:var(--panel-border); }
-    .filter-btn { font-family:var(--font-mono); font-size:10px; letter-spacing:0.08em; text-transform:uppercase; padding:14px 20px; background:transparent; color:#555; cursor:pointer; border:none; border-right:1px solid var(--rule-thin); transition:all 0.15s; }
-    .filter-btn:hover, .filter-btn.active { color:var(--paper); background:var(--ink-mid); }
-    .proposal-item { color:inherit; }
-    .proposal-item:hover .proposal-title { color:var(--blue); }
-    @media (max-width:900px) { .gov-layout { grid-template-columns:1fr; } .gov-sidebar { border-top:var(--panel-border); } }
+    .gov-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 32px 56px; align-items: start; }
+    .filter-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+    .filter-btn { padding: 9px 16px; border: 1px solid var(--ns-line); border-radius: 999px; background: transparent; color: var(--ns-muted);
+      font: 500 12px/1.2 var(--ns-mono); letter-spacing: .1em; text-transform: uppercase; cursor: pointer; }
+    .filter-btn:hover { color: var(--ns-text); border-color: var(--ns-line-strong); }
+    .filter-btn.active { color: #000; background: var(--ns-text); border-color: var(--ns-text); }
+    .gov-sidebar { display: flex; flex-direction: column; gap: 16px; }
+    @media (max-width: 899px) { .gov-layout { grid-template-columns: 1fr; } }
   </style>
   <script src="/radio/radio.js" defer></script>
 </head>
 <body>
-  <nav class="site-nav">
-    <div class="nav-inner">
-      <a href="index.html" class="nav-logo">
-        <img class="nav-logo-mark" src="images/neta-mark-night.png" alt="Neta DAO" width="251" height="192">
-      </a>
-      <ul class="nav-links">
-        <li><a href="index.html">Home</a></li><li><a href="about.html">About</a></li>
-        <li><a href="governance.html" class="active">Governance</a></li><li><a href="https://academy.netadao.org">Academy</a></li>
-        <li><a href="netadata.html">NetaDATA</a></li>
-        <li><a href="https://daodao.zone/dao/juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6" target="_blank" rel="noopener" class="nav-cta">DAO DAO ↗</a></li>
-      </ul>
-      <button class="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
+<a class="ns-skip" href="#main">Skip to content</a>
+<header class="ns-header">
+  <div class="ns-wrap ns-header__inner">
+    <a class="ns-brand" href="/"><img src="images/neta-mark-night.png" alt="" width="251" height="192"><span>Neta DAO</span></a>
+    <nav class="ns-nav" aria-label="Main"><a href="about.html">About</a><a href="governance.html" aria-current="page">Governance</a><a href="netadata.html">NetaDATA</a><a href="getinvolved.html">Get involved</a><a class="ns-pill" href="https://daodao.zone/dao/juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6" target="_blank" rel="noopener">DAO DAO ↗</a></nav>
+  </div>
+</header>
+<main id="main">
+  <section class="ns-wrap ns-pagehead" aria-labelledby="gov-title">
+    <div class="ns-pagehead__copy">
+      <p class="ns-kicker">On-chain · Live from Juno</p>
+      <h1 class="ns-h1 ns-h1--page" id="gov-title">Governance <span class="ns-grad">proposals</span></h1>
+      <p class="ns-lede">Every decision recorded on-chain. Loaded live from the DAO DAO indexer. Click any proposal to view the full text and vote record on DAO DAO.</p>
     </div>
-  </nav>
+  </section>
 
-  <div style="margin-top:56px;border-bottom:var(--panel-border);">
-    <div style="padding:48px 48px 40px;border-bottom:var(--panel-border);">
-      <p class="section-label">On-chain · Live from Juno</p>
-      <h1 class="section-title">Governance<br><span class="grad-text">Proposals</span></h1>
-      <p class="section-body">Every decision recorded on-chain. Loaded live from the DAO DAO indexer. Click any proposal to view the full text and vote record on DAO DAO.</p>
-    </div>
-
-    <div class="gov-layout">
+  <section class="ns-section--rule" aria-label="Proposals">
+    <div class="ns-wrap ns-section gov-layout">
       <div class="gov-main">
-        <div class="filter-row">
-          <button class="filter-btn active" data-filter="all">All</button>
-          <button class="filter-btn" data-filter="open">Open</button>
-          <button class="filter-btn" data-filter="passed">Passed</button>
-          <button class="filter-btn" data-filter="executed">Executed</button>
-          <button class="filter-btn" data-filter="failed">Failed</button>
+        <div class="filter-row" role="group" aria-label="Show">
+          <button type="button" class="filter-btn active" data-filter="all">All</button>
+          <button type="button" class="filter-btn" data-filter="open">Open</button>
+          <button type="button" class="filter-btn" data-filter="passed">Passed</button>
+          <button type="button" class="filter-btn" data-filter="executed">Executed</button>
+          <button type="button" class="filter-btn" data-filter="failed">Failed</button>
         </div>
         <div id="proposals-main"></div>
       </div>
-      <aside class="gov-sidebar">
-        <div class="sidebar-section">
-          <h4>How it works</h4>
+      <aside class="gov-sidebar" aria-label="About proposals">
+        <div class="ns-panel">
+          <p class="ns-panel__tag">How it works</p>
           <p>Proposals require a $NETA deposit. Voting is open to all staked $NETA holders for 5 days. Majority threshold with 10% quorum required.</p>
-          <a href="about.html" class="btn btn-outline" style="font-size:10px;padding:10px 16px;">DAO Structure →</a>
+          <p class="ns-panel__foot"><a class="ns-link" href="about.html">DAO structure →</a></p>
         </div>
-        <div class="sidebar-section">
-          <h4>Parameters</h4>
-          <div class="sidebar-stat"><span class="sidebar-stat-label">Quorum</span><span class="sidebar-stat-val">10%</span></div>
-          <div class="sidebar-stat"><span class="sidebar-stat-label">Threshold</span><span class="sidebar-stat-val">Majority</span></div>
-          <div class="sidebar-stat"><span class="sidebar-stat-label">Voting Period</span><span class="sidebar-stat-val">5 days</span></div>
-          <div class="sidebar-stat"><span class="sidebar-stat-label">Unstaking</span><span class="sidebar-stat-val">~91 days</span></div>
-          <div class="sidebar-stat"><span class="sidebar-stat-label">Revoting</span><span class="sidebar-stat-val">Allowed</span></div>
+        <div class="ns-panel">
+          <p class="ns-panel__tag">Parameters</p>
+          <dl class="ns-facts ns-facts--pairs">
+            <div><dt>Quorum</dt><dd>10%</dd></div>
+            <div><dt>Threshold</dt><dd>Majority</dd></div>
+            <div><dt>Voting period</dt><dd>5 days</dd></div>
+            <div><dt>Unstaking</dt><dd>~91 days</dd></div>
+            <div><dt>Revoting</dt><dd>Allowed</dd></div>
+          </dl>
         </div>
-        <div class="sidebar-section">
-          <h4>Links</h4>
-          <div style="display:flex;flex-direction:column;gap:10px;">
-            <a href="https://daodao.zone/dao/juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6/proposals" target="_blank" rel="noopener" style="font-family:var(--font-mono);font-size:10px;color:var(--blue);">DAO DAO — All proposals ↗</a>
-            <a href="https://github.com/netadao/organizational-docs" target="_blank" rel="noopener" style="font-family:var(--font-mono);font-size:10px;color:var(--blue);">Organizational Docs ↗</a>
-            <a href="https://www.mintscan.io/juno/address/juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6" target="_blank" rel="noopener" style="font-family:var(--font-mono);font-size:10px;color:var(--blue);">Mintscan ↗</a>
-          </div>
+        <div class="ns-panel">
+          <p class="ns-panel__tag">Links</p>
+          <p class="ns-linklist">
+            <a class="ns-link" href="https://daodao.zone/dao/juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6/proposals" target="_blank" rel="noopener">DAO DAO · all proposals ↗</a>
+            <a class="ns-link" href="https://github.com/netadao/organizational-docs" target="_blank" rel="noopener">Organizational docs ↗</a>
+            <a class="ns-link" href="https://www.mintscan.io/juno/address/juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6" target="_blank" rel="noopener">Mintscan ↗</a>
+          </p>
         </div>
       </aside>
     </div>
+  </section>
+</main>
+<footer class="ns-footer">
+  <div class="ns-wrap ns-footer__inner">
+    <a class="ns-footer__brand" href="/"><img src="images/neta-mark-loop-small.webp" alt="" width="160" height="106" loading="lazy">Neta DAO</a>
+    <span class="ns-footer__addr">juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6</span>
+    <nav aria-label="Footer"><a href="https://academy.netadao.org">Academy</a><a href="https://fork.netadao.org">Fork</a><a href="https://play.netadao.org">Play</a><a href="https://github.com/netadao" target="_blank" rel="noopener">GitHub</a></nav>
   </div>
-
-  <footer class="site-footer">
-    <div class="footer-inner">
-      <div class="footer-brand-cell"><p class="footer-brand">Neta DAO</p><p class="footer-tagline">A public institution for the Interchain</p></div>
-      <div class="footer-links-cell"><ul class="footer-links"><li><a href="about.html">About</a></li><li><a href="governance.html">Governance</a></li><li><a href="https://academy.netadao.org">Academy</a></li><li><a href="netadata.html">NetaDATA</a></li><li><a href="https://github.com/netadao" target="_blank" rel="noopener">GitHub ↗</a></li></ul></div>
-    </div>
-    <div class="footer-bottom">
-      <p class="footer-copy">© Neta DAO. Nonprofit. On-chain. Open source.</p>
-      <p class="footer-copy">juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6</p>
-    </div>
-  </footer>
-  <script src="js/main.js"></script>
+</footer>
+<script src="js/main.js"></script>
   <script>
     window.NetaDAO.loadProposals('#proposals-main', 50);
     document.querySelectorAll('.filter-btn').forEach(btn => {

@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Neta DAO Academy — Coining Reason</title>
   <meta name="description" content="Neta DAO Academy hosts Coining Reason, a free public discussion series exploring Web3 through economics, philosophy, politics, and psychoanalysis." />
-  <link rel="stylesheet" href="css/style.css" />
+  <meta name="theme-color" content="#000000" />
+  <link rel="stylesheet" href="css/night.css?v=1" />
   <style>
     .series-hero {
       background: var(--bg-panel);
@@ -223,39 +224,28 @@
       .journal-block { padding: 28px 24px; }
       .journal-block::before { display: none; }
     }
+    .panel { padding-block: clamp(40px, 5vw, 64px); border-top: 1px solid var(--ns-line); }
+    .series-hero, .current-series, .journal-block { border-radius: 6px; }
   </style>
   <script src="/radio/radio.js" defer></script>
 </head>
 <body>
-
-  <nav class="site-nav">
-    <div class="nav-inner">
-      <a href="index.html" class="nav-logo">
-        <img class="nav-logo-mark" src="images/neta-mark-night.png" alt="Neta DAO" width="251" height="192">
-      </a>
-      <ul class="nav-links">
-        <li><a href="index.html">Home</a></li>
-        <li><a href="about.html">About</a></li>
-        <li><a href="getinvolved.html">Get Involved</a></li>
-        <li><a href="https://academy.netadao.org" class="active">Academy</a></li>
-        <li><a href="netadata.html">NetaDATA</a></li>
-        <li><a href="https://daodao.zone/dao/juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6" target="_blank" rel="noopener" class="nav-cta">DAO DAO ↗</a></li>
-      </ul>
-      <button class="nav-hamburger" aria-label="Open menu"><span></span><span></span><span></span></button>
-    </div>
-  </nav>
-
-  <section class="hero" style="padding-top:140px; padding-bottom:64px;">
-    <div class="container">
-      <p class="hero-eyebrow">Educational SubDAO · Free &amp; Open</p>
-      <h1>Neta DAO <span class="grad-text">Academy</span></h1>
-      <p class="hero-sub">An educational initiative dedicated to thinking rigorously about the Interchain — through public seminars, open meetings, and the forthcoming <em>Fork</em> journal. Free. No prerequisites. Everyone welcome.</p>
-      <div class="hero-actions">
-        <a href="https://github.com/NetaDAOAcademy/CoiningReason" target="_blank" rel="noopener" class="btn btn-primary">GitHub ↗</a>
-        <a href="#journal" class="btn btn-outline">Fork Journal</a>
-      </div>
-    </div>
+<a class="ns-skip" href="#main">Skip to content</a>
+<header class="ns-header">
+  <div class="ns-wrap ns-header__inner">
+    <a class="ns-brand" href="/"><img src="images/neta-mark-night.png" alt="" width="251" height="192"><span>Neta DAO</span></a>
+    <nav class="ns-nav" aria-label="Main"><a href="about.html">About</a><a href="governance.html">Governance</a><a href="netadata.html">NetaDATA</a><a href="getinvolved.html">Get involved</a><a class="ns-pill" href="https://daodao.zone/dao/juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6" target="_blank" rel="noopener">DAO DAO ↗</a></nav>
   </div>
+</header>
+<main id="main">
+  <section class="ns-wrap ns-pagehead" aria-labelledby="ac-title">
+    <div class="ns-pagehead__copy">
+      <p class="ns-kicker">Educational subDAO · Free &amp; open</p>
+      <h1 class="ns-h1 ns-h1--page" id="ac-title">Neta DAO <span class="ns-grad">Academy</span></h1>
+      <p class="ns-lede">An educational initiative dedicated to thinking rigorously about the Interchain — through public seminars, open meetings, and the forthcoming <em>Fork</em> journal. Free. No prerequisites. Everyone welcome.</p>
+      <p class="ns-actions"><a class="ns-btn ns-btn--solid" href="https://github.com/NetaDAOAcademy/CoiningReason" target="_blank" rel="noopener">GitHub ↗</a><a class="ns-btn" href="#journal">Fork Journal</a></p>
+    </div>
+  </section>
 
   <!-- ── Coining Reason intro ── -->
   <div class="panel">
@@ -554,7 +544,7 @@
   </div>
 
   <!-- ── Fork Journal ── -->
-  <section class="panel" id="journal">
+  <div class="panel" id="journal">
     <div class="container reveal">
       <p class="section-label">Forthcoming</p>
       <h2 class="section-title" style="margin-bottom:40px;">Fork: The Journal of Interchain Theory &amp; Politics</h2>
@@ -592,26 +582,15 @@
     </div>
   </div>
 
-  <footer class="site-footer">
-    <div class="container">
-      <div class="footer-inner">
-        <div><p class="footer-brand">Neta DAO Academy</p><p class="footer-tagline">An educational subDAO of Neta DAO</p></div>
-        <ul class="footer-links">
-          <li><a href="index.html">Neta DAO</a></li>
-          <li><a href="about.html">About</a></li>
-          <li><a href="getinvolved.html">Get Involved</a></li>
-          <li><a href="netadata.html">NetaDATA</a></li>
-          <li><a href="https://github.com/NetaDAOAcademy" target="_blank" rel="noopener">GitHub</a></li>
-        </ul>
-      </div>
-      <div class="footer-bottom">
-        <p class="footer-copy">© Neta DAO Academy. Free and open educational programs for the Interchain.</p>
-        <p class="footer-copy" style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);">academy.netadao.org — coming soon</p>
-      </div>
-    </div>
-  </footer>
-
-  <script src="js/main.js"></script>
+</main>
+<footer class="ns-footer">
+  <div class="ns-wrap ns-footer__inner">
+    <a class="ns-footer__brand" href="/"><img src="images/neta-mark-loop-small.webp" alt="" width="160" height="106" loading="lazy">Neta DAO</a>
+    <span class="ns-footer__addr">juno1c5v6jkmre5xa9vf9aas6yxewc7aqmjy0rlkkyk4d88pnwuhclyhsrhhns6</span>
+    <nav aria-label="Footer"><a href="https://academy.netadao.org">Academy</a><a href="https://fork.netadao.org">Fork</a><a href="https://play.netadao.org">Play</a><a href="https://github.com/netadao" target="_blank" rel="noopener">GitHub</a></nav>
+  </div>
+</footer>
+<script src="js/main.js"></script>
   <script>
     // Collapsible unit archives
     document.querySelectorAll('.collapsible-toggle').forEach(btn => {
