@@ -40,7 +40,6 @@
   window.__netadaoRadio = true;
 
   const STREAM = window.ND_RADIO_STREAM || 'https://s3.radio.co/s39c195d74/listen';
-  const STATUS = window.ND_RADIO_STATUS || 'https://public.radio.co/stations/s39c195d74/status';
   const FAMILY = window.ND_RADIO_FAMILY || /^(?:(?:www|academy|fork|play)\.)?netadao\.(?:org|localhost)$/;
   const BAR_H = 52;
   const SCRIPT_BASE = (document.currentScript && document.currentScript.src) || location.href;
@@ -88,8 +87,7 @@
     .ndr-bar.is-on .ndr-live { color: #F2559B; }
     .ndr-bar.is-on .ndr-live i { background: #F2559B; box-shadow: 0 0 8px #F2559B; animation: ndr-pulse 1.6s ease-in-out infinite; }
     .ndr-bar.is-loading .ndr-live { color: #A3A8B0; }
-    .ndr-track { flex: 1 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
-      font-weight: 400; letter-spacing: .02em; text-transform: none; font-size: 12px; color: #A3A8B0; }
+    .ndr-gap { flex: 1 1 auto; }
     .ndr-vol { flex: none; display: flex; align-items: center; gap: 8px; }
     .ndr-vol input { width: 96px; accent-color: #39C6EE; }
     .ndr-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -167,7 +165,7 @@
     <img class="ndr-mark" src="${asset('neta-mark-night.png')}" alt="" width="251" height="192">
     <span class="ndr-name">Neta DAO Radio</span>
     <span class="ndr-live"><i></i><span class="ndr-live-label">Off</span></span>
-    <span class="ndr-track" aria-live="polite"></span>
+    <span class="ndr-gap"></span>
     <label class="ndr-vol"><span class="ndr-sr">Volume</span><input type="range" min="0" max="100" step="5"></label>`;
   const spacer = document.createElement('div');
   spacer.className = 'ndr-spacer';
@@ -177,7 +175,6 @@
 
   const button = bar.querySelector('.ndr-play');
   const liveLabel = bar.querySelector('.ndr-live-label');
-  const track = bar.querySelector('.ndr-track');
   const volume = bar.querySelector('.ndr-vol input');
   const audio = new Audio();
   audio.preload = 'none';
@@ -234,22 +231,11 @@
     button.setAttribute('aria-pressed', String(next !== 'off'));
     button.setAttribute('aria-label', next === 'off' ? 'Play Neta DAO Radio' : 'Stop Neta DAO Radio');
     liveLabel.textContent = next === 'on' ? 'Live' : next === 'loading' ? 'Tuning…' : 'Off';
-    if (next === 'off') track.textContent = '';
     tellFrame();
   };
 
-  let statusTimer = 0;
-  const pollStatus = async () => {
-    clearTimeout(statusTimer);
-    if (state === 'off') return;
-    try {
-      const res = await fetch(STATUS, { cache: 'no-store' });
-      const data = await res.json();
-      const title = data && data.current_track && data.current_track.title;
-      track.textContent = title ? title : '';
-    } catch (_) { /* no now-playing: the bar just shows Live */ }
-    statusTimer = setTimeout(pollStatus, 30000);
-  };
+  // No now-playing line: the station's track data (radio.co's status) keeps the last automated track while a live
+  // source is on air, so it was often stale or wrong. The bar says Live, and that is all it claims.
 
   const start = async () => {
     setState('loading');
@@ -257,14 +243,12 @@
     try {
       await audio.play();
       setState('on');
-      pollStatus();
     } catch (error) {
       setState('off');
       console.warn('Neta DAO Radio could not start:', error);
     }
   };
   const stop = () => {
-    clearTimeout(statusTimer);
     audio.pause();
     audio.removeAttribute('src');
     audio.load();

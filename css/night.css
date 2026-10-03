@@ -71,6 +71,25 @@ h1, h2, h3, h4, p, dl, dd, ol, ul, figure { margin: 0; }
 .ns-nav a[aria-current="page"] { color: var(--ns-text); box-shadow: inset 0 -1px 0 var(--ns-text); }
 .ns-nav .ns-pill { padding: 9px 16px; border: 1px solid var(--ns-text); border-radius: 999px; }
 .ns-nav .ns-pill:hover { background: var(--ns-text); color: #000; }
+/* Initiatives: a small menu of the family's sites. It opens on hover with a pointer, or with its button; Escape,
+   a click elsewhere or moving focus away closes it (main.js). Play is listed, not linked, until it opens. */
+.ns-menu { position: relative; }
+.ns-menu__toggle { display: inline-flex; align-items: center; gap: 6px; padding: 6px 0; border: 0; background: none; color: var(--ns-text);
+  font: inherit; letter-spacing: inherit; text-transform: inherit; cursor: pointer; }
+.ns-menu__toggle:hover { color: var(--ns-cyan); }
+.ns-menu__toggle svg { width: 10px; height: 10px; fill: none; stroke: currentColor; stroke-width: 1.5; transition: transform .12s ease; }
+.ns-menu[data-open] .ns-menu__toggle svg { transform: rotate(180deg); }
+.ns-menu__list { display: none; position: absolute; top: calc(100% + 10px); left: -16px; z-index: 50; min-width: 300px; margin: 0; padding: 8px 0;
+  list-style: none; background: var(--ns-band); border: 1px solid var(--ns-line); border-radius: 6px; }
+.ns-menu__list::before { content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: 11px; }
+.ns-menu[data-open] .ns-menu__list { display: block; }
+@media (hover: hover) { .ns-menu:hover .ns-menu__list { display: block; } }
+.ns-menu__list a, .ns-menu__soon { display: flex; align-items: baseline; justify-content: space-between; gap: 24px; padding: 10px 16px; text-decoration: none; }
+.ns-menu__list a:hover { background: var(--ns-raised); color: var(--ns-text); }
+.ns-menu__list b { font: 700 22px/1 var(--ns-display); letter-spacing: .02em; }
+.ns-menu__list span span, .ns-menu__list a span { font: 400 11px/1.4 var(--ns-mono); letter-spacing: .12em; color: var(--ns-muted); white-space: nowrap; }
+.ns-menu__soon { cursor: default; color: var(--ns-dim); }
+.ns-menu__soon span { color: var(--ns-cyan) !important; }
 
 /* ── Type ───────────────────────────────────────────────── */
 .ns-kicker { font: 400 12px/1.4 var(--ns-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ns-muted); }

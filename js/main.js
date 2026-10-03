@@ -145,3 +145,18 @@ document.querySelectorAll('[data-film]').forEach(function (card) {
   card.addEventListener('pointerenter', load);
   card.addEventListener('focus', load);
 });
+
+// Initiatives (the header's menu): the button opens and closes it; Escape closes it and returns to the button;
+// so does a click or focus elsewhere. With a pointer it also opens on hover (night.css).
+document.querySelectorAll('[data-ns-menu]').forEach(function (menu) {
+  var toggle = menu.querySelector('.ns-menu__toggle');
+  if (!toggle) return;
+  function setOpen(open) {
+    if (open) menu.setAttribute('data-open', ''); else menu.removeAttribute('data-open');
+    toggle.setAttribute('aria-expanded', String(open));
+  }
+  toggle.addEventListener('click', function () { setOpen(!menu.hasAttribute('data-open')); });
+  menu.addEventListener('keydown', function (e) { if (e.key === 'Escape' && menu.hasAttribute('data-open')) { setOpen(false); toggle.focus(); } });
+  menu.addEventListener('focusout', function (e) { if (!menu.contains(e.relatedTarget)) setOpen(false); });
+  document.addEventListener('click', function (e) { if (!menu.contains(e.target)) setOpen(false); });
+});
