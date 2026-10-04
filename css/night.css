@@ -167,12 +167,12 @@ h1, h2, h3, h4, p, dl, dd, ol, ul, figure { margin: 0; }
 .ns-legend i { display: block; width: 28px; height: 3px; background: var(--ns-grad); }
 .ns-legend i.is-ahead { background: repeating-linear-gradient(90deg, var(--ns-cyan) 0 7px, transparent 7px 13px); }
 .ns-timeline { overflow-x: auto; scrollbar-width: thin; }
-.ns-timeline__track { position: relative; min-width: 1040px; }
+.ns-timeline__track { position: relative; min-width: calc(var(--steps, 7) * 130px); }   /* --steps: how many; --done: how many are done */
 .ns-timeline__done, .ns-timeline__ahead { position: absolute; top: 7.5px; height: 3px; }
-.ns-timeline__done { left: 9px; width: calc(400% / 7); background: var(--ns-grad); }
-.ns-timeline__ahead { left: calc(400% / 7 + 9px); right: 0; background: repeating-linear-gradient(90deg, var(--ns-cyan) 0 7px, transparent 7px 13px);
+.ns-timeline__done { left: 9px; width: calc((var(--done, 5) - 1) * 100% / var(--steps, 7)); background: var(--ns-grad); }
+.ns-timeline__ahead { left: calc((var(--done, 5) - 1) * 100% / var(--steps, 7) + 9px); right: 0; background: repeating-linear-gradient(90deg, var(--ns-cyan) 0 7px, transparent 7px 13px);
   -webkit-mask-image: linear-gradient(90deg, #000 75%, transparent); mask-image: linear-gradient(90deg, #000 75%, transparent); }
-.ns-timeline ol { position: relative; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.ns-timeline ol { position: relative; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(var(--steps, 7), minmax(0, 1fr)); }
 .ns-timeline li { display: flex; flex-direction: column; gap: 10px; padding-right: 22px; }
 .ns-timeline__dot { position: relative; z-index: 1; display: block; width: 18px; height: 18px; border-radius: 50%; background: var(--ns-band); border: 3px solid var(--dot, var(--ns-pink)); }
 .ns-timeline li.is-ahead .ns-timeline__dot { border-style: dashed; }
