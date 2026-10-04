@@ -174,8 +174,8 @@ h1, h2, h3, h4, p, dl, dd, ol, ul, figure { margin: 0; }
   -webkit-mask-image: linear-gradient(90deg, #000 75%, transparent); mask-image: linear-gradient(90deg, #000 75%, transparent); }
 .ns-timeline ol { position: relative; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(var(--steps, 7), minmax(0, 1fr)); }
 .ns-timeline li { display: flex; flex-direction: column; gap: 10px; padding-right: 22px; }
-.ns-timeline__dot { position: relative; z-index: 1; display: block; width: 18px; height: 18px; border-radius: 50%; background: var(--ns-band); border: 3px solid var(--dot, var(--ns-pink)); }
-.ns-timeline li.is-ahead .ns-timeline__dot { border-style: dashed; }
+.ns-timeline__dot { position: relative; z-index: 1; display: block; width: 18px; height: 18px; border-radius: 50%; background: var(--dot, var(--ns-pink)); border: 3px solid var(--dot, var(--ns-pink)); }   /* done: filled */
+.ns-timeline li.is-ahead .ns-timeline__dot { background: var(--ns-band); border-style: dashed; }   /* ahead: open, dashed */
 .ns-timeline__when { font: 500 12px/1.4 var(--ns-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ns-muted); }
 .ns-timeline li.is-ahead .ns-timeline__when { color: var(--ns-cyan); }
 .ns-timeline__what { font-size: 16px; line-height: 1.5; }
