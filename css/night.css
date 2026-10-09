@@ -202,9 +202,9 @@ a.ns-card:hover { color: var(--ns-text); border-color: var(--ns-line-strong); }
 .ns-card:hover .ns-fork__bottom, .ns-card:focus-visible .ns-fork__bottom { transform: none; transition: transform .46s cubic-bezier(.3, 1.4, .5, 1) 70ms; }
 .ns-card:hover .ns-fork__slash, .ns-card:focus-visible .ns-fork__slash { opacity: 1; stroke-dashoffset: 0; transition: stroke-dashoffset .34s cubic-bezier(.2, .6, .25, 1), opacity 0s; }
 /* Ludum: its own wordmark, the name in Anton with the byline beside it on the Neta line; hover turns the byline yellow, as on Ludum */
-.ns-ludum { display: inline-flex; align-items: flex-end; gap: 14px; }
+.ns-ludum { display: inline-flex; align-items: stretch; gap: 14px; }
 .ns-ludum__name { font: 400 clamp(64px, 17vw, 88px)/.8 Anton, 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: -.005em; }
-.ns-ludum__by { padding-left: 12px; border-left: 2px solid; border-image: linear-gradient(180deg, var(--ns-pink), var(--ns-cyan)) 1; font: 500 11px/1.35 var(--ns-mono); letter-spacing: .16em; text-transform: uppercase; white-space: nowrap; color: var(--ns-muted); transition: color .2s ease; }
+.ns-ludum__by { display: flex; flex-direction: column; justify-content: center; padding-left: 12px; border-left: 2px solid; border-image: linear-gradient(180deg, var(--ns-pink), var(--ns-cyan)) 1; font: 500 11px/1.35 var(--ns-mono); letter-spacing: .16em; text-transform: uppercase; white-space: nowrap; color: var(--ns-muted); transition: color .2s ease; }
 .ns-card:hover .ns-ludum__by, .ns-card:focus-visible .ns-ludum__by { color: #F4C430; }
 .ns-tbd { display: flex; flex-direction: column; gap: 6px; padding: 12px 16px; border: 1px dashed var(--ns-line-strong); border-radius: 4px; }
 .ns-tbd b { font: 500 15px/1.2 var(--ns-mono); }
@@ -249,14 +249,27 @@ a.ns-card:hover { color: var(--ns-text); border-color: var(--ns-line-strong); }
 .ns-est b { font: 800 clamp(88px, 10vw, 140px)/.82 var(--ns-display); }
 
 /* ── Footer ─────────────────────────────────────────────── */
+/* The footer every Neta DAO site shares: the name and its mark, the treasury address here, the family's
+   addresses, X, Discord and GitHub as their own marks, the copyright. */
 .ns-footer { border-top: 1px solid var(--ns-line); }
 .ns-footer__inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 40px; padding-block: 28px; font: 400 12px/1.5 var(--ns-mono); color: var(--ns-dim); }
 .ns-footer__brand { display: flex; align-items: center; gap: 12px; color: var(--ns-text); font: 800 22px/1 var(--ns-display); text-transform: uppercase; text-decoration: none; }
 .ns-footer__brand img { display: block; height: 36px; width: auto; }
 .ns-footer__addr { word-break: break-all; }
-.ns-footer nav { display: flex; flex-wrap: wrap; gap: 8px 24px; letter-spacing: .08em; text-transform: uppercase; }
-.ns-footer nav a { color: var(--ns-muted); }
-.ns-footer nav a:hover { color: var(--ns-cyan); }
+.ns-footer__nav { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px; }
+.ns-footer__sites, .ns-footer__marks { display: flex; flex-wrap: wrap; align-items: center; margin: 0; padding: 0; list-style: none; }
+.ns-footer__sites { gap: 8px 24px; padding-right: 28px; border-right: 1px solid var(--ns-line); letter-spacing: .08em; text-transform: uppercase; }
+.ns-footer__sites a { color: var(--ns-muted); text-decoration: none; }
+.ns-footer__sites a:hover { color: var(--ns-cyan); }
+.ns-footer__marks { gap: 16px; }
+.ns-footer__icon { display: grid; place-items: center; width: 32px; height: 32px; color: var(--ns-muted); transition: color .2s ease; }
+.ns-footer__icon:hover { color: var(--ns-cyan); }
+.ns-footer__icon svg { display: block; width: 20px; height: 20px; }
+.ns-footer__print { margin: 0; letter-spacing: .08em; text-transform: uppercase; }
+@media (max-width: 599px) {
+  .ns-footer__nav { flex-basis: 100%; justify-content: space-between; }
+  .ns-footer__sites { padding-right: 0; border-right: 0; }
+}
 
 /* ── Legacy names (the NetaDATA and Academy pages, live proposals) ── */
 .container { max-width: var(--ns-max); margin: 0 auto; padding-inline: var(--ns-pad); }
