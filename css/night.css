@@ -4,7 +4,7 @@
    signal: the pink-to-cyan of the Neta mark. Shared by every page.
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Sofia+Sans+Extra+Condensed:wght@800&family=Barlow:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Sofia+Sans+Extra+Condensed:wght@800&family=Barlow:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500&family=Anton&display=swap');
 
 :root {
   --ns-bg: #000000;
@@ -201,6 +201,11 @@ a.ns-card:hover { color: var(--ns-text); border-color: var(--ns-line-strong); }
 .ns-fork__slash { fill: none; stroke-width: 5; stroke-opacity: .9; stroke-dasharray: 241 241; stroke-dashoffset: 241; opacity: 0; transition: opacity .2s ease-out, stroke-dashoffset 0s linear .2s; }
 .ns-card:hover .ns-fork__bottom, .ns-card:focus-visible .ns-fork__bottom { transform: none; transition: transform .46s cubic-bezier(.3, 1.4, .5, 1) 70ms; }
 .ns-card:hover .ns-fork__slash, .ns-card:focus-visible .ns-fork__slash { opacity: 1; stroke-dashoffset: 0; transition: stroke-dashoffset .34s cubic-bezier(.2, .6, .25, 1), opacity 0s; }
+/* Ludum: its own wordmark, the name in Anton with the byline beside it on the Neta line; hover turns the byline yellow, as on Ludum */
+.ns-ludum { display: inline-flex; align-items: flex-end; gap: 14px; }
+.ns-ludum__name { font: 400 clamp(64px, 17vw, 88px)/.8 Anton, 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: -.005em; }
+.ns-ludum__by { padding-left: 12px; border-left: 2px solid; border-image: linear-gradient(180deg, var(--ns-pink), var(--ns-cyan)) 1; font: 500 11px/1.35 var(--ns-mono); letter-spacing: .16em; text-transform: uppercase; white-space: nowrap; color: var(--ns-muted); transition: color .2s ease; }
+.ns-card:hover .ns-ludum__by, .ns-card:focus-visible .ns-ludum__by { color: #F4C430; }
 .ns-tbd { display: flex; flex-direction: column; gap: 6px; padding: 12px 16px; border: 1px dashed var(--ns-line-strong); border-radius: 4px; }
 .ns-tbd b { font: 500 15px/1.2 var(--ns-mono); }
 .ns-tbd span { font: 400 11px/1.3 var(--ns-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ns-dim); }
