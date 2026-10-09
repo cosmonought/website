@@ -1,6 +1,6 @@
-/* Neta DAO Radio: one live player shared by netadao.org, academy., fork. and play.
+/* Neta DAO Radio: one live player shared by netadao.org, academy., fork., ludum. and play.
  *
- * Every page on the four sites loads this one file:
+ * Every page on the five sites loads this one file:
  *   <script src="https://netadao.org/radio/radio.js" defer></script>
  *
  * A bar is pinned to the bottom of every page, on or off. Pressing play starts the stream right there.
@@ -40,7 +40,7 @@
   window.__netadaoRadio = true;
 
   const STREAM = window.ND_RADIO_STREAM || 'https://s3.radio.co/s39c195d74/listen';
-  const FAMILY = window.ND_RADIO_FAMILY || /^(?:(?:www|academy|fork|play)\.)?netadao\.(?:org|localhost)$/;
+  const FAMILY = window.ND_RADIO_FAMILY || /^(?:(?:www|academy|fork|ludum|play)\.)?netadao\.(?:org|localhost)$/;
   const BAR_H = 52;
   const SCRIPT_BASE = (document.currentScript && document.currentScript.src) || location.href;
   const asset = (name) => new URL(name, SCRIPT_BASE).href;
